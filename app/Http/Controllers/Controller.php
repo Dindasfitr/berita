@@ -6,3 +6,7 @@ abstract class Controller
 {
     //
 }
+
+
+// php artisan make:controller Api/BeritaController --api
+
