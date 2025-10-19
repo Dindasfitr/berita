@@ -1,0 +1,1581 @@
+{
+    "openapi": "3.0.0",
+    "info": {
+        "title": "API Berita Documentation",
+        "description": "Dokumentasi API untuk sistem manajemen berita",
+        "contact": {
+            "name": "API Support",
+            "email": "admin@example.com"
+        },
+        "version": "1.0.0"
+    },
+    "servers": [
+        {
+            "url": "http://localhost:8000/api",
+            "description": "Local Development Server"
+        }
+    ],
+    "paths": {
+        "/register": {
+            "post": {
+                "tags": [
+                    "Authentication"
+                ],
+                "summary": "Register new user",
+                "description": "Mendaftarkan user baru dan menyimpan data ke tabel user",
+                "operationId": "5d4fa5d5607ed675ba93907e1fc94534",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "username",
+                                    "name",
+                                    "email",
+                                    "password",
+                                    "password_confirmation",
+                                    "role"
+                                ],
+                                "properties": {
+                                    "username": {
+                                        "type": "string",
+                                        "example": "johndoe"
+                                    },
+                                    "name": {
+                                        "type": "string",
+                                        "example": "John Doe"
+                                    },
+                                    "email": {
+                                        "type": "string",
+                                        "format": "email",
+                                        "example": "john@example.com"
+                                    },
+                                    "password": {
+                                        "type": "string",
+                                        "format": "password",
+                                        "example": "password123"
+                                    },
+                                    "password_confirmation": {
+                                        "type": "string",
+                                        "format": "password",
+                                        "example": "password123"
+                                    },
+                                    "role": {
+                                        "type": "string",
+                                        "enum": [
+                                            "penulis",
+                                            "pembaca"
+                                        ],
+                                        "example": "pembaca"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "User registered successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "User berhasil didaftarkan"
+                                        },
+                                        "data": {
+                                            "properties": {
+                                                "id_user": {
+                                                    "type": "integer",
+                                                    "example": 1
+                                                },
+                                                "username": {
+                                                    "type": "string",
+                                                    "example": "johndoe"
+                                                },
+                                                "name": {
+                                                    "type": "string",
+                                                    "example": "John Doe"
+                                                },
+                                                "email": {
+                                                    "type": "string",
+                                                    "example": "john@example.com"
+                                                },
+                                                "role": {
+                                                    "type": "string",
+                                                    "example": "pembaca"
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": false
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Validation error"
+                                        },
+                                        "errors": {
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Server error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": false
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Terjadi kesalahan saat registrasi"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/berita": {
+            "get": {
+                "tags": [
+                    "Berita"
+                ],
+                "summary": "Get all news",
+                "description": "Mengambil daftar semua berita dengan relasi penulis (dari user) dan kategori",
+                "operationId": "c8bd9833b8f7aac208368626904736f7",
+                "responses": {
+                    "200": {
+                        "description": "List semua berita",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "properties": {
+                                            "id_berita": {
+                                                "type": "integer",
+                                                "example": 1
+                                            },
+                                            "id_user": {
+                                                "type": "integer",
+                                                "example": 1
+                                            },
+                                            "id_kategori": {
+                                                "type": "integer",
+                                                "example": 1
+                                            },
+                                            "judul": {
+                                                "type": "string",
+                                                "example": "Berita Terkini"
+                                            },
+                                            "isi": {
+                                                "type": "string",
+                                                "example": "Isi berita..."
+                                            },
+                                            "gambar": {
+                                                "type": "string",
+                                                "example": "image.jpg"
+                                            },
+                                            "tgl_terbit": {
+                                                "type": "string",
+                                                "format": "date",
+                                                "example": "2025-01-01"
+                                            },
+                                            "penulis": {
+                                                "properties": {
+                                                    "id_user": {
+                                                        "type": "integer",
+                                                        "example": 1
+                                                    },
+                                                    "name": {
+                                                        "type": "string",
+                                                        "example": "John Doe"
+                                                    },
+                                                    "email": {
+                                                        "type": "string",
+                                                        "example": "john@example.com"
+                                                    },
+                                                    "role": {
+                                                        "type": "string",
+                                                        "example": "penulis"
+                                                    }
+                                                },
+                                                "type": "object"
+                                            },
+                                            "kategori": {
+                                                "type": "object"
+                                            }
+                                        },
+                                        "type": "object"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "post": {
+                "tags": [
+                    "Berita"
+                ],
+                "summary": "Create new news",
+                "description": "Menambahkan berita baru",
+                "operationId": "652e3f1e832bc19bd49db68176f32baf",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "multipart/form-data": {
+                            "schema": {
+                                "required": [
+                                    "id_user",
+                                    "id_kategori",
+                                    "judul",
+                                    "isi",
+                                    "tgl_terbit"
+                                ],
+                                "properties": {
+                                    "id_user": {
+                                        "type": "integer",
+                                        "example": 1
+                                    },
+                                    "id_kategori": {
+                                        "type": "integer",
+                                        "example": 1
+                                    },
+                                    "judul": {
+                                        "type": "string",
+                                        "example": "Berita Terkini"
+                                    },
+                                    "isi": {
+                                        "type": "string",
+                                        "example": "Isi berita..."
+                                    },
+                                    "gambar": {
+                                        "type": "string",
+                                        "format": "binary"
+                                    },
+                                    "tgl_terbit": {
+                                        "type": "string",
+                                        "format": "date",
+                                        "example": "2025-01-01"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Berita berhasil dibuat",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "id_berita": {
+                                            "type": "integer",
+                                            "example": 1
+                                        },
+                                        "id_user": {
+                                            "type": "integer",
+                                            "example": 1
+                                        },
+                                        "id_kategori": {
+                                            "type": "integer",
+                                            "example": 1
+                                        },
+                                        "judul": {
+                                            "type": "string",
+                                            "example": "Berita Terkini"
+                                        },
+                                        "isi": {
+                                            "type": "string",
+                                            "example": "Isi berita..."
+                                        },
+                                        "gambar": {
+                                            "type": "string",
+                                            "example": "image.jpg"
+                                        },
+                                        "tgl_terbit": {
+                                            "type": "string",
+                                            "format": "date",
+                                            "example": "2025-01-01"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/berita/{id_berita}": {
+            "get": {
+                "tags": [
+                    "Berita"
+                ],
+                "summary": "Get single news",
+                "description": "Mengambil detail berita berdasarkan ID dengan relasi penulis (dari user) dan kategori",
+                "operationId": "c22cf8736863cea9a5fa47708eeb1b86",
+                "parameters": [
+                    {
+                        "name": "id_berita",
+                        "in": "path",
+                        "description": "ID berita",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 1
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Detail berita",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "id_berita": {
+                                            "type": "integer",
+                                            "example": 1
+                                        },
+                                        "id_user": {
+                                            "type": "integer",
+                                            "example": 1
+                                        },
+                                        "id_kategori": {
+                                            "type": "integer",
+                                            "example": 1
+                                        },
+                                        "judul": {
+                                            "type": "string",
+                                            "example": "Berita Terkini"
+                                        },
+                                        "isi": {
+                                            "type": "string",
+                                            "example": "Isi berita..."
+                                        },
+                                        "gambar": {
+                                            "type": "string",
+                                            "example": "image.jpg"
+                                        },
+                                        "tgl_terbit": {
+                                            "type": "string",
+                                            "format": "date",
+                                            "example": "2025-01-01"
+                                        },
+                                        "penulis": {
+                                            "properties": {
+                                                "id_user": {
+                                                    "type": "integer",
+                                                    "example": 1
+                                                },
+                                                "username": {
+                                                    "type": "string",
+                                                    "example": "John Doe"
+                                                },
+                                                "name": {
+                                                    "type": "string",
+                                                    "example": "John Doe"
+                                                },
+                                                "email": {
+                                                    "type": "string",
+                                                    "example": "john@example.com"
+                                                },
+                                                "role": {
+                                                    "type": "string",
+                                                    "example": "penulis"
+                                                }
+                                            },
+                                            "type": "object"
+                                        },
+                                        "kategori": {
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Berita tidak ditemukan"
+                    }
+                }
+            },
+            "post": {
+                "tags": [
+                    "Berita"
+                ],
+                "summary": "Update news",
+                "description": "Mengubah data berita (gunakan POST dengan _method=PUT untuk upload file)",
+                "operationId": "db2e10d4931786042a13b15b1aa26ec1",
+                "parameters": [
+                    {
+                        "name": "id_berita",
+                        "in": "path",
+                        "description": "ID berita",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 1
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "multipart/form-data": {
+                            "schema": {
+                                "properties": {
+                                    "id_user": {
+                                        "type": "integer",
+                                        "example": 1
+                                    },
+                                    "id_kategori": {
+                                        "type": "integer",
+                                        "example": 1
+                                    },
+                                    "judul": {
+                                        "type": "string",
+                                        "example": "Berita Terkini"
+                                    },
+                                    "isi": {
+                                        "type": "string",
+                                        "example": "Isi berita..."
+                                    },
+                                    "gambar": {
+                                        "type": "string",
+                                        "format": "binary"
+                                    },
+                                    "tgl_terbit": {
+                                        "type": "string",
+                                        "format": "date",
+                                        "example": "2025-01-01"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Berita berhasil diupdate"
+                    },
+                    "404": {
+                        "description": "Berita tidak ditemukan"
+                    }
+                }
+            },
+            "delete": {
+                "tags": [
+                    "Berita"
+                ],
+                "summary": "Delete news",
+                "description": "Menghapus berita",
+                "operationId": "a5b4402490af0eeccd96414fabf18f23",
+                "parameters": [
+                    {
+                        "name": "id_berita",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 1
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Berita berhasil dihapus"
+                    },
+                    "404": {
+                        "description": "Berita tidak ditemukan"
+                    }
+                }
+            }
+        },
+        "/berita/user/{id_user}": {
+            "get": {
+                "tags": [
+                    "Berita"
+                ],
+                "summary": "Get news by user",
+                "description": "Mengambil daftar semua berita yang dibuat oleh user tertentu",
+                "operationId": "b7c96b113640c3fc018658914d6b1469",
+                "parameters": [
+                    {
+                        "name": "id_user",
+                        "in": "path",
+                        "description": "ID user / penulis",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 1
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "List berita milik user",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "properties": {
+                                            "id_berita": {
+                                                "type": "integer",
+                                                "example": 1
+                                            },
+                                            "id_user": {
+                                                "type": "integer",
+                                                "example": 1
+                                            },
+                                            "id_kategori": {
+                                                "type": "integer",
+                                                "example": 1
+                                            },
+                                            "judul": {
+                                                "type": "string",
+                                                "example": "Berita Terkini"
+                                            },
+                                            "isi": {
+                                                "type": "string",
+                                                "example": "Isi berita..."
+                                            },
+                                            "gambar": {
+                                                "type": "string",
+                                                "example": "image.jpg"
+                                            },
+                                            "tgl_terbit": {
+                                                "type": "string",
+                                                "format": "date",
+                                                "example": "2025-01-01"
+                                            },
+                                            "kategori": {
+                                                "type": "object"
+                                            }
+                                        },
+                                        "type": "object"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "User tidak ditemukan atau tidak memiliki berita"
+                    }
+                }
+            }
+        },
+        "/likes": {
+            "get": {
+                "tags": [
+                    "Disukai"
+                ],
+                "summary": "Get all likes",
+                "description": "Mengambil semua like/disukai",
+                "operationId": "65e88aa962ee2b93499d2cc54bb5a8ff",
+                "responses": {
+                    "200": {
+                        "description": "List semua like",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "properties": {
+                                            "id_disukai": {
+                                                "type": "integer",
+                                                "example": 1
+                                            },
+                                            "id_user": {
+                                                "type": "integer",
+                                                "example": 1
+                                            },
+                                            "id_berita": {
+                                                "type": "integer",
+                                                "example": 1
+                                            },
+                                            "suka": {
+                                                "type": "boolean",
+                                                "example": true
+                                            },
+                                            "created_at": {
+                                                "type": "string",
+                                                "format": "date-time",
+                                                "example": "2025-01-01T00:00:00Z"
+                                            },
+                                            "updated_at": {
+                                                "type": "string",
+                                                "format": "date-time",
+                                                "example": "2025-01-01T00:00:00Z"
+                                            }
+                                        },
+                                        "type": "object"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "post": {
+                "tags": [
+                    "Disukai"
+                ],
+                "summary": "Create or toggle like",
+                "description": "Menambahkan like baru atau update jika sudah ada",
+                "operationId": "6b998b51fbe77ebda9a4193f66f61630",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "id_user",
+                                    "id_berita"
+                                ],
+                                "properties": {
+                                    "id_user": {
+                                        "type": "integer",
+                                        "example": 1
+                                    },
+                                    "id_berita": {
+                                        "type": "integer",
+                                        "example": 1
+                                    },
+                                    "suka": {
+                                        "type": "boolean",
+                                        "example": true
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Like berhasil dibuat atau diupdate",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "id_disukai": {
+                                            "type": "integer",
+                                            "example": 1
+                                        },
+                                        "id_user": {
+                                            "type": "integer",
+                                            "example": 1
+                                        },
+                                        "id_berita": {
+                                            "type": "integer",
+                                            "example": 1
+                                        },
+                                        "suka": {
+                                            "type": "boolean",
+                                            "example": true
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/likes/{id_disukai}": {
+            "put": {
+                "tags": [
+                    "Disukai"
+                ],
+                "summary": "Update like",
+                "description": "Mengubah status like/disukai",
+                "operationId": "6326b661e39527f636abf765ff9ec306",
+                "parameters": [
+                    {
+                        "name": "id_disukai",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 1
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "suka"
+                                ],
+                                "properties": {
+                                    "suka": {
+                                        "type": "boolean",
+                                        "example": false
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Like berhasil diupdate",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "id_disukai": {
+                                            "type": "integer",
+                                            "example": 1
+                                        },
+                                        "id_user": {
+                                            "type": "integer",
+                                            "example": 1
+                                        },
+                                        "id_berita": {
+                                            "type": "integer",
+                                            "example": 1
+                                        },
+                                        "suka": {
+                                            "type": "boolean",
+                                            "example": false
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Like tidak ditemukan"
+                    }
+                }
+            },
+            "delete": {
+                "tags": [
+                    "Disukai"
+                ],
+                "summary": "Delete like",
+                "description": "Menghapus like/disukai",
+                "operationId": "db764387b1180ecd433ed3da28e6a41c",
+                "parameters": [
+                    {
+                        "name": "id_disukai",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 1
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Like berhasil dihapus",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Like berhasil dihapus"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Like tidak ditemukan"
+                    }
+                }
+            }
+        },
+        "/history": {
+            "get": {
+                "tags": [
+                    "History"
+                ],
+                "summary": "Get all history",
+                "description": "Mengambil daftar semua history pembaca",
+                "operationId": "14f74227e70d8e2d7f4a9e60b88bb44c",
+                "responses": {
+                    "200": {
+                        "description": "List semua history",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "properties": {
+                                            "id_history": {
+                                                "type": "integer",
+                                                "example": 1
+                                            },
+                                            "id_user": {
+                                                "type": "integer",
+                                                "example": 1
+                                            },
+                                            "id_berita": {
+                                                "type": "integer",
+                                                "example": 1
+                                            },
+                                            "berita": {
+                                                "type": "object"
+                                            },
+                                            "user": {
+                                                "type": "object"
+                                            },
+                                            "created_at": {
+                                                "type": "string",
+                                                "format": "date-time"
+                                            },
+                                            "updated_at": {
+                                                "type": "string",
+                                                "format": "date-time"
+                                            }
+                                        },
+                                        "type": "object"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "post": {
+                "tags": [
+                    "History"
+                ],
+                "summary": "Create history",
+                "description": "Menambahkan history berita yang dibaca user",
+                "operationId": "e0ba1265c764960df65278a25aee452e",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "id_user",
+                                    "id_berita"
+                                ],
+                                "properties": {
+                                    "id_user": {
+                                        "type": "integer",
+                                        "example": 1
+                                    },
+                                    "id_berita": {
+                                        "type": "integer",
+                                        "example": 1
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "History berhasil dibuat",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "id_history": {
+                                            "type": "integer",
+                                            "example": 1
+                                        },
+                                        "id_user": {
+                                            "type": "integer",
+                                            "example": 1
+                                        },
+                                        "id_berita": {
+                                            "type": "integer",
+                                            "example": 1
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/history/{id_history}": {
+            "get": {
+                "tags": [
+                    "History"
+                ],
+                "summary": "Get single history",
+                "description": "Mengambil detail history berdasarkan ID",
+                "operationId": "91aae1400c7e144cd644ce6af6f36230",
+                "parameters": [
+                    {
+                        "name": "id_history",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 1
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Detail history",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "id_history": {
+                                            "type": "integer",
+                                            "example": 1
+                                        },
+                                        "id_user": {
+                                            "type": "integer",
+                                            "example": 1
+                                        },
+                                        "id_berita": {
+                                            "type": "integer",
+                                            "example": 1
+                                        },
+                                        "created_at": {
+                                            "type": "string",
+                                            "format": "date-time"
+                                        },
+                                        "updated_at": {
+                                            "type": "string",
+                                            "format": "date-time"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "History tidak ditemukan"
+                    }
+                }
+            },
+            "delete": {
+                "tags": [
+                    "History"
+                ],
+                "summary": "Delete history",
+                "description": "Menghapus history",
+                "operationId": "36bc6882533b33f0a0728e430bc8dd72",
+                "parameters": [
+                    {
+                        "name": "id_history",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 1
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "History berhasil dihapus"
+                    },
+                    "404": {
+                        "description": "History tidak ditemukan"
+                    }
+                }
+            }
+        },
+        "/history/user/{id_user}": {
+            "get": {
+                "tags": [
+                    "History"
+                ],
+                "summary": "Get history by user",
+                "description": "Mengambil semua history berita yang dibaca oleh user tertentu",
+                "operationId": "4d59bcffa68cca28b695438a8ebbe60c",
+                "parameters": [
+                    {
+                        "name": "id_user",
+                        "in": "path",
+                        "description": "ID user",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 1
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "List history user",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "properties": {
+                                            "id_history": {
+                                                "type": "integer",
+                                                "example": 1
+                                            },
+                                            "id_user": {
+                                                "type": "integer",
+                                                "example": 1
+                                            },
+                                            "id_berita": {
+                                                "type": "integer",
+                                                "example": 1
+                                            },
+                                            "berita": {
+                                                "type": "object"
+                                            },
+                                            "created_at": {
+                                                "type": "string",
+                                                "format": "date-time"
+                                            },
+                                            "updated_at": {
+                                                "type": "string",
+                                                "format": "date-time"
+                                            }
+                                        },
+                                        "type": "object"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "User tidak ditemukan atau tidak memiliki history"
+                    }
+                }
+            }
+        },
+        "/kategori": {
+            "get": {
+                "tags": [
+                    "Kategori"
+                ],
+                "summary": "Get all categories",
+                "description": "Mengambil daftar semua kategori",
+                "operationId": "1b040b0f2415dcd4e129ad42941e17aa",
+                "responses": {
+                    "200": {
+                        "description": "List semua kategori",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "properties": {
+                                            "id_kategori": {
+                                                "type": "integer",
+                                                "example": 1
+                                            },
+                                            "kategori": {
+                                                "type": "string",
+                                                "example": "Teknologi"
+                                            }
+                                        },
+                                        "type": "object"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "post": {
+                "tags": [
+                    "Kategori"
+                ],
+                "summary": "Create new category",
+                "description": "Menambahkan kategori baru",
+                "operationId": "4982306ad64a6759985e192a9f7f1636",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "kategori"
+                                ],
+                                "properties": {
+                                    "kategori": {
+                                        "type": "string",
+                                        "example": "Teknologi"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Kategori berhasil dibuat",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "id_kategori": {
+                                            "type": "integer",
+                                            "example": 1
+                                        },
+                                        "kategori": {
+                                            "type": "string",
+                                            "example": "Teknologi"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/kategori/{id_kategori}": {
+            "get": {
+                "tags": [
+                    "Kategori"
+                ],
+                "summary": "Get single category",
+                "description": "Mengambil detail kategori berdasarkan ID",
+                "operationId": "26b1985162f1f5ede4c324447e049fa3",
+                "parameters": [
+                    {
+                        "name": "id_kategori",
+                        "in": "path",
+                        "description": "ID kategori",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 1
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Detail kategori",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "id_kategori": {
+                                            "type": "integer",
+                                            "example": 1
+                                        },
+                                        "kategori": {
+                                            "type": "string",
+                                            "example": "Teknologi"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Kategori tidak ditemukan"
+                    }
+                }
+            },
+            "put": {
+                "tags": [
+                    "Kategori"
+                ],
+                "summary": "Update category",
+                "description": "Mengubah nama kategori",
+                "operationId": "c89b086e5c9aa28c2ce5f24a4603e1bd",
+                "parameters": [
+                    {
+                        "name": "id_kategori",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 1
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "kategori"
+                                ],
+                                "properties": {
+                                    "kategori": {
+                                        "type": "string",
+                                        "example": "Teknologi"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Kategori berhasil diupdate",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "id_kategori": {
+                                            "type": "integer",
+                                            "example": 1
+                                        },
+                                        "kategori": {
+                                            "type": "string",
+                                            "example": "Teknologi"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Kategori tidak ditemukan"
+                    }
+                }
+            },
+            "delete": {
+                "tags": [
+                    "Kategori"
+                ],
+                "summary": "Delete category",
+                "description": "Menghapus kategori",
+                "operationId": "2d4515d33fc8da20713477e856b210ee",
+                "parameters": [
+                    {
+                        "name": "id_kategori",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 1
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Kategori berhasil dihapus"
+                    },
+                    "404": {
+                        "description": "Kategori tidak ditemukan"
+                    }
+                }
+            }
+        },
+        "/users": {
+            "get": {
+                "tags": [
+                    "Users"
+                ],
+                "summary": "Get all users",
+                "description": "Mengambil daftar semua user",
+                "operationId": "7208c29037df2b8bb02499ba39ed8a78",
+                "responses": {
+                    "200": {
+                        "description": "List semua user",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "properties": {
+                                            "id_user": {
+                                                "type": "integer",
+                                                "example": 1
+                                            },
+                                            "username": {
+                                                "type": "string",
+                                                "example": "johndoe"
+                                            },
+                                            "name": {
+                                                "type": "string",
+                                                "example": "John Doe"
+                                            },
+                                            "email": {
+                                                "type": "string",
+                                                "example": "john@example.com"
+                                            },
+                                            "role": {
+                                                "type": "string",
+                                                "example": "pembaca"
+                                            }
+                                        },
+                                        "type": "object"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/users/{id_user}": {
+            "get": {
+                "tags": [
+                    "Users"
+                ],
+                "summary": "Get single user",
+                "description": "Mengambil detail user berdasarkan ID",
+                "operationId": "163dadaa4e56547be21e2297b0992bf6",
+                "parameters": [
+                    {
+                        "name": "id_user",
+                        "in": "path",
+                        "description": "ID user",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 1
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Detail user",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "id_user": {
+                                            "type": "integer",
+                                            "example": 1
+                                        },
+                                        "username": {
+                                            "type": "string",
+                                            "example": "johndoe"
+                                        },
+                                        "name": {
+                                            "type": "string",
+                                            "example": "John Doe"
+                                        },
+                                        "email": {
+                                            "type": "string",
+                                            "example": "john@example.com"
+                                        },
+                                        "role": {
+                                            "type": "string",
+                                            "example": "pembaca"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "User tidak ditemukan"
+                    }
+                }
+            },
+            "put": {
+                "tags": [
+                    "Users"
+                ],
+                "summary": "Update user",
+                "description": "Mengupdate username, name, email, dan password",
+                "operationId": "d74471d6414b21c44f6aa5e5497cfbbc",
+                "parameters": [
+                    {
+                        "name": "id_user",
+                        "in": "path",
+                        "description": "ID user",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 1
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "properties": {
+                                    "username": {
+                                        "type": "string",
+                                        "example": "johndoe"
+                                    },
+                                    "name": {
+                                        "type": "string",
+                                        "example": "John Doe"
+                                    },
+                                    "email": {
+                                        "type": "string",
+                                        "example": "john@example.com"
+                                    },
+                                    "old_password": {
+                                        "type": "string",
+                                        "format": "password",
+                                        "example": "oldpass123"
+                                    },
+                                    "new_password": {
+                                        "type": "string",
+                                        "format": "password",
+                                        "example": "newpass123"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "User berhasil diupdate",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "id_user": {
+                                            "type": "integer",
+                                            "example": 1
+                                        },
+                                        "username": {
+                                            "type": "string",
+                                            "example": "johndoe"
+                                        },
+                                        "name": {
+                                            "type": "string",
+                                            "example": "John Doe"
+                                        },
+                                        "email": {
+                                            "type": "string",
+                                            "example": "john@example.com"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Password lama salah"
+                    },
+                    "404": {
+                        "description": "User tidak ditemukan"
+                    }
+                }
+            },
+            "delete": {
+                "tags": [
+                    "Users"
+                ],
+                "summary": "Delete user",
+                "description": "Menghapus user",
+                "operationId": "26b1d3f0d3f3d223b97c69f73802c588",
+                "parameters": [
+                    {
+                        "name": "id_user",
+                        "in": "path",
+                        "description": "ID user",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 1
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "User berhasil dihapus"
+                    },
+                    "404": {
+                        "description": "User tidak ditemukan"
+                    }
+                }
+            }
+        }
+    },
+    "components": {
+        "securitySchemes": {
+            "bearerAuth": {
+                "type": "http",
+                "bearerFormat": "JWT",
+                "scheme": "bearer"
+            }
+        }
+    },
+    "tags": [
+        {
+            "name": "Authentication",
+            "description": "API Endpoints untuk autentikasi"
+        },
+        {
+            "name": "Berita",
+            "description": "API Endpoints untuk manajemen berita"
+        },
+        {
+            "name": "Disukai",
+            "description": "API Endpoints untuk manajemen likes/disukai"
+        },
+        {
+            "name": "History",
+            "description": "API Endpoints untuk history berita yang dibaca user"
+        },
+        {
+            "name": "Kategori",
+            "description": "API Endpoints untuk manajemen kategori"
+        },
+        {
+            "name": "Users",
+            "description": "API Endpoints untuk manajemen user"
+        }
+    ]
+}

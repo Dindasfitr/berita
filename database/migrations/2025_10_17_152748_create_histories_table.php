@@ -13,7 +13,7 @@ return new class extends Migration
     {
         Schema::create('history', function (Blueprint $table) {
             $table->bigIncrements('id_history');
-            $table->unsignedBigInteger('id_pembaca');
+            $table->unsignedBigInteger('id_user');
             $table->unsignedBigInteger('id_berita');
             $table->timestamps();
         });

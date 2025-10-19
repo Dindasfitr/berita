@@ -13,8 +13,9 @@ return new class extends Migration
     {
         Schema::create('disukai', function (Blueprint $table) {
             $table->bigIncrements('id_disukai');
-            $table->unsignedBigInteger('id_pembaca');
+            $table->unsignedBigInteger('id_user');
             $table->unsignedBigInteger('id_berita');
+            $table->boolean('suka')->nullable(); // default null
             $table->timestamps();
         });
     }

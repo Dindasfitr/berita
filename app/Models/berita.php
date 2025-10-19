@@ -2,17 +2,19 @@
 
 namespace App\Models;
 
+use App\Models\User;
+use App\Models\kategori;
 use Illuminate\Database\Eloquent\Model;
 
-class berita extends Model
+class Berita extends Model
 {
     protected $table = 'berita';
     protected $primaryKey = 'id_berita';
-    protected $fillable = ['id_penulis', 'id_kategori', 'judul', 'isi', 'gambar', 'tgl_terbit'];
+    protected $fillable = ['id_user', 'id_kategori', 'judul', 'isi', 'gambar', 'tgl_terbit'];
 
     public function penulis()
     {
-        return $this->morphTo(__FUNCTION__, 'penulis_type', 'id_penulis');
+        return $this->belongsTo(User::class, 'id_penulis');
     }
 
 
