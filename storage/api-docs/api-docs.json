@@ -35,7 +35,8 @@
                                     "email",
                                     "password",
                                     "password_confirmation",
-                                    "role"
+                                    "role",
+                                    "membership"
                                 ],
                                 "properties": {
                                     "username": {
@@ -68,6 +69,15 @@
                                             "pembaca"
                                         ],
                                         "example": "pembaca"
+                                    },
+                                    "membership": {
+                                        "type": "string",
+                                        "enum": [
+                                            "guest",
+                                            "free",
+                                            "premium"
+                                        ],
+                                        "example": "free"
                                     }
                                 },
                                 "type": "object"
@@ -111,6 +121,10 @@
                                                 "role": {
                                                     "type": "string",
                                                     "example": "pembaca"
+                                                },
+                                                "membership": {
+                                                    "type": "string",
+                                                    "example": "free"
                                                 }
                                             },
                                             "type": "object"
@@ -1318,6 +1332,238 @@
                 }
             }
         },
+        "/dislikes": {
+            "get": {
+                "tags": [
+                    "TidakDisukai"
+                ],
+                "summary": "Get all dislikes",
+                "description": "Mengambil semua data tidak disukai",
+                "operationId": "c53e6b54fa63349389c1127338fc26e2",
+                "responses": {
+                    "200": {
+                        "description": "List semua data tidak disukai",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "properties": {
+                                            "id_tidaksuka": {
+                                                "type": "integer",
+                                                "example": 1
+                                            },
+                                            "id_user": {
+                                                "type": "integer",
+                                                "example": 1
+                                            },
+                                            "id_berita": {
+                                                "type": "integer",
+                                                "example": 1
+                                            },
+                                            "tidak_suka": {
+                                                "type": "boolean",
+                                                "example": true
+                                            },
+                                            "created_at": {
+                                                "type": "string",
+                                                "format": "date-time",
+                                                "example": "2025-01-01T00:00:00Z"
+                                            },
+                                            "updated_at": {
+                                                "type": "string",
+                                                "format": "date-time",
+                                                "example": "2025-01-01T00:00:00Z"
+                                            }
+                                        },
+                                        "type": "object"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "post": {
+                "tags": [
+                    "TidakDisukai"
+                ],
+                "summary": "Create or toggle dislike",
+                "description": "Menambahkan data tidak disukai baru atau update jika sudah ada",
+                "operationId": "f11b8c38c9ada6c8104630654c85ea3c",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "id_user",
+                                    "id_berita"
+                                ],
+                                "properties": {
+                                    "id_user": {
+                                        "type": "integer",
+                                        "example": 1
+                                    },
+                                    "id_berita": {
+                                        "type": "integer",
+                                        "example": 1
+                                    },
+                                    "tidak_suka": {
+                                        "type": "boolean",
+                                        "example": true
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Dislike berhasil dibuat atau diupdate",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "id_tidaksuka": {
+                                            "type": "integer",
+                                            "example": 1
+                                        },
+                                        "id_user": {
+                                            "type": "integer",
+                                            "example": 1
+                                        },
+                                        "id_berita": {
+                                            "type": "integer",
+                                            "example": 1
+                                        },
+                                        "tidak_suka": {
+                                            "type": "boolean",
+                                            "example": true
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/dislikes/{id_tidaksuka}": {
+            "put": {
+                "tags": [
+                    "TidakDisukai"
+                ],
+                "summary": "Update dislike",
+                "description": "Mengubah status tidak disukai",
+                "operationId": "e87e14de4eb7119c100c1cbf751a4ff4",
+                "parameters": [
+                    {
+                        "name": "id_tidaksuka",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 1
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "tidak_suka"
+                                ],
+                                "properties": {
+                                    "tidak_suka": {
+                                        "type": "boolean",
+                                        "example": false
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Dislike berhasil diupdate",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "id_tidaksuka": {
+                                            "type": "integer",
+                                            "example": 1
+                                        },
+                                        "id_user": {
+                                            "type": "integer",
+                                            "example": 1
+                                        },
+                                        "id_berita": {
+                                            "type": "integer",
+                                            "example": 1
+                                        },
+                                        "tidak_suka": {
+                                            "type": "boolean",
+                                            "example": false
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Dislike tidak ditemukan"
+                    }
+                }
+            },
+            "delete": {
+                "tags": [
+                    "TidakDisukai"
+                ],
+                "summary": "Delete dislike",
+                "description": "Menghapus data tidak disukai",
+                "operationId": "c97279a62ddbbbada6f80f5f05a6732f",
+                "parameters": [
+                    {
+                        "name": "id_tidaksuka",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 1
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Dislike berhasil dihapus",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Dislike berhasil dihapus"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Dislike tidak ditemukan"
+                    }
+                }
+            }
+        },
         "/users": {
             "get": {
                 "tags": [
@@ -1572,6 +1818,10 @@
         {
             "name": "Kategori",
             "description": "API Endpoints untuk manajemen kategori"
+        },
+        {
+            "name": "TidakDisukai",
+            "description": "API Endpoints untuk manajemen dislike/tidak disukai"
         },
         {
             "name": "Users",

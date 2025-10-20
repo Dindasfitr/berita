@@ -6,11 +6,11 @@ use App\Models\User;
 use App\Models\Berita;
 use Illuminate\Database\Eloquent\Model;
 
-class Disukai extends Model
+class TidakDisukai extends Model
 {
-    protected $table = 'disukai';
-    protected $primaryKey = 'id_disukai';
-    protected $fillable = ['id_user', 'id_berita', 'suka'];
+    protected $table = 'tidak_disukai';
+    protected $primaryKey = 'id_tidaksuka';
+    protected $fillable = ['id_user', 'id_berita', 'tidak_suka'];
 
     public function user() {
         return $this->belongsTo(User::class, 'id_user');

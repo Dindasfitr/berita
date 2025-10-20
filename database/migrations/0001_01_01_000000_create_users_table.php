@@ -18,6 +18,7 @@ return new class extends Migration
             $table->string('name');
             $table->string('email');
             $table->string('role');
+            $table->enum('membership', ['guest', 'free', 'premium']);
             $table->rememberToken();
             $table->timestamps();
         });
