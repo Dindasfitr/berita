@@ -219,7 +219,8 @@ class BeritaController extends Controller
      *                 @OA\Property(property="judul", type="string", example="Berita Terkini"),
      *                 @OA\Property(property="isi", type="string", example="Isi berita..."),
      *                 @OA\Property(property="gambar", type="string", format="binary"),
-     *                 @OA\Property(property="tgl_terbit", type="string", format="date", example="2025-01-01")
+     *                 @OA\Property(property="tgl_terbit", type="string", format="date", example="2025-01-01"),
+     *                 @OA\Property(property="is_premium", type="boolean", example=false),
      *             )
      *         )
      *     ),
@@ -233,7 +234,8 @@ class BeritaController extends Controller
      *             @OA\Property(property="judul", type="string", example="Berita Terkini"),
      *             @OA\Property(property="isi", type="string", example="Isi berita..."),
      *             @OA\Property(property="gambar", type="string", example="image.jpg"),
-     *             @OA\Property(property="tgl_terbit", type="string", format="date", example="2025-01-01")
+     *             @OA\Property(property="tgl_terbit", type="string", format="date", example="2025-01-01"),
+     *             @OA\Property(property="is_premium", type="boolean", example=false)
      *         )
      *     )
      * )
@@ -246,7 +248,8 @@ class BeritaController extends Controller
             'judul' => 'required|string|max:255',
             'isi' => 'required|string',
             'gambar' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
-            'tgl_terbit' => 'required|date'
+            'tgl_terbit' => 'required|date',
+            'id_premium' => 'nullable|boolean'
         ]);
 
         $data = $request->only(['id_user', 'id_kategori', 'judul', 'isi', 'tgl_terbit']);

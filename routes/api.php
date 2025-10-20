@@ -34,10 +34,10 @@ Route::get('/berita/user/{id_user}', [BeritaController::class, 'getByUser']);
 
 // Protected routes (butuh login + role)
 // Penulis & Admin bisa tambah atau edit berita
-Route::middleware(['auth:sanctum', 'role:admin,penulis'])->group(function () {
+// Route::middleware(['auth:sanctum', 'role:admin,penulis'])->group(function () {
     Route::post('/berita', [BeritaController::class, 'store']);
     Route::post('/berita/{id_berita}', [BeritaController::class, 'update']); // edit menggunakan post
-});
+// });
 
 // Hanya Admin bisa hapus berita
 Route::middleware(['auth:sanctum', 'role:admin'])->group(function () {
@@ -49,12 +49,8 @@ Route::get('/likes', [DisukaiController::class, 'index']);
 Route::post('/likes', [DisukaiController::class, 'store']);
 Route::put('/likes/{id_disukai}', [DisukaiController::class, 'update']);
 Route::delete('/likes/{id_disukai}', [DisukaiController::class, 'destroy']);
-
-// Tidak Disukai
-Route::get('/dislikes', [TidakDisukaiController::class, 'index']);
-Route::post('/dislikes', [TidakDisukaiController::class, 'store']);
-Route::put('/dislikes/{id_tidaksuka}', [TidakDisukaiController::class, 'update']);
-Route::delete('/dislikes/{id_tidaksuka}', [TidakDisukaiController::class, 'destroy']);
+Route::get('/likes/true', [DisukaiController::class, 'getTrueLikes']);
+Route::get('/likes/false', [DisukaiController::class, 'getFalseLikes']);
 
 // History
 Route::get('/history', [HistoryController::class, 'index']);

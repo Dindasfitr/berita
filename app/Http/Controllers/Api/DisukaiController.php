@@ -44,6 +44,81 @@ class DisukaiController extends Controller
         return response()->json($likes);
     }
 
+
+
+
+
+
+    /**
+     * @OA\Get(
+     *     path="/likes/true",
+     *     tags={"Disukai"},
+     *     summary="Get all true likes",
+     *     description="Mengambil semua data disukai dengan nilai suka = true",
+     *     @OA\Response(
+     *         response=200,
+     *         description="List like dengan suka = true",
+     *         @OA\JsonContent(
+     *             type="array",
+     *             @OA\Items(
+     *                 @OA\Property(property="id_disukai", type="integer", example=1),
+     *                 @OA\Property(property="id_user", type="integer", example=1),
+     *                 @OA\Property(property="id_berita", type="integer", example=1),
+     *                 @OA\Property(property="suka", type="boolean", example=true),
+     *                 @OA\Property(property="created_at", type="string", format="date-time", example="2025-01-01T00:00:00Z"),
+     *                 @OA\Property(property="updated_at", type="string", format="date-time", example="2025-01-01T00:00:00Z")
+     *             )
+     *         )
+     *     )
+     * )
+     */
+    public function getTrueLikes(): JsonResponse
+    {
+        $likes = Disukai::where('suka', true)->get();
+        return response()->json($likes);
+    }
+
+    /**
+     * @OA\Get(
+     *     path="/likes/false",
+     *     tags={"Disukai"},
+     *     summary="Get all dislike",
+     *     description="Mengambil semua data disukai dengan nilai suka = false",
+     *     @OA\Response(
+     *         response=200,
+     *         description="List like dengan suka = false",
+     *         @OA\JsonContent(
+     *             type="array",
+     *             @OA\Items(
+     *                 @OA\Property(property="id_disukai", type="integer", example=1),
+     *                 @OA\Property(property="id_user", type="integer", example=1),
+     *                 @OA\Property(property="id_berita", type="integer", example=1),
+     *                 @OA\Property(property="suka", type="boolean", example=false),
+     *                 @OA\Property(property="created_at", type="string", format="date-time", example="2025-01-01T00:00:00Z"),
+     *                 @OA\Property(property="updated_at", type="string", format="date-time", example="2025-01-01T00:00:00Z")
+     *             )
+     *         )
+     *     )
+     * )
+     */
+    public function getFalseLikes(): JsonResponse
+    {
+        $likes = Disukai::where('suka', false)->get();
+        return response()->json($likes);
+    }
+
+
+
+
+
+
+
+
+
+
+
+
+
     /**
      * @OA\Post(
      *     path="/likes",

@@ -304,6 +304,10 @@
                                         "type": "string",
                                         "format": "date",
                                         "example": "2025-01-01"
+                                    },
+                                    "is_premium": {
+                                        "type": "boolean",
+                                        "example": false
                                     }
                                 },
                                 "type": "object"
@@ -346,6 +350,10 @@
                                             "type": "string",
                                             "format": "date",
                                             "example": "2025-01-01"
+                                        },
+                                        "is_premium": {
+                                            "type": "boolean",
+                                            "example": false
                                         }
                                     },
                                     "type": "object"
@@ -730,6 +738,112 @@
                                         }
                                     },
                                     "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/likes/true": {
+            "get": {
+                "tags": [
+                    "Disukai"
+                ],
+                "summary": "Get all true likes",
+                "description": "Mengambil semua data disukai dengan nilai suka = true",
+                "operationId": "c04a9435aad25676db1ed72b999a30a0",
+                "responses": {
+                    "200": {
+                        "description": "List like dengan suka = true",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "properties": {
+                                            "id_disukai": {
+                                                "type": "integer",
+                                                "example": 1
+                                            },
+                                            "id_user": {
+                                                "type": "integer",
+                                                "example": 1
+                                            },
+                                            "id_berita": {
+                                                "type": "integer",
+                                                "example": 1
+                                            },
+                                            "suka": {
+                                                "type": "boolean",
+                                                "example": true
+                                            },
+                                            "created_at": {
+                                                "type": "string",
+                                                "format": "date-time",
+                                                "example": "2025-01-01T00:00:00Z"
+                                            },
+                                            "updated_at": {
+                                                "type": "string",
+                                                "format": "date-time",
+                                                "example": "2025-01-01T00:00:00Z"
+                                            }
+                                        },
+                                        "type": "object"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/likes/false": {
+            "get": {
+                "tags": [
+                    "Disukai"
+                ],
+                "summary": "Get all dislike",
+                "description": "Mengambil semua data disukai dengan nilai suka = false",
+                "operationId": "3f1908af98fd88c3076c1143131c1474",
+                "responses": {
+                    "200": {
+                        "description": "List like dengan suka = false",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "properties": {
+                                            "id_disukai": {
+                                                "type": "integer",
+                                                "example": 1
+                                            },
+                                            "id_user": {
+                                                "type": "integer",
+                                                "example": 1
+                                            },
+                                            "id_berita": {
+                                                "type": "integer",
+                                                "example": 1
+                                            },
+                                            "suka": {
+                                                "type": "boolean",
+                                                "example": false
+                                            },
+                                            "created_at": {
+                                                "type": "string",
+                                                "format": "date-time",
+                                                "example": "2025-01-01T00:00:00Z"
+                                            },
+                                            "updated_at": {
+                                                "type": "string",
+                                                "format": "date-time",
+                                                "example": "2025-01-01T00:00:00Z"
+                                            }
+                                        },
+                                        "type": "object"
+                                    }
                                 }
                             }
                         }
