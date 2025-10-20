@@ -31,8 +31,8 @@ class AuthController extends Controller
      *             @OA\Property(property="username", type="string", example="johndoe"),
      *             @OA\Property(property="name", type="string", example="John Doe"),
      *             @OA\Property(property="email", type="string", format="email", example="john@example.com"),
-     *             @OA\Property(property="password", type="string", format="password", example="password123"),
-     *             @OA\Property(property="password_confirmation", type="string", format="password", example="password123"),
+     *             @OA\Property(property="password", type="string", format="password", example="P@ssW0rd3"),
+     *             @OA\Property(property="password_confirmation", type="string", format="password", example="P@ssW0rd3"),
      *             @OA\Property(property="role", type="string", enum={"penulis", "pembaca"}, example="pembaca")
      *         )
      *     ),
@@ -75,12 +75,20 @@ class AuthController extends Controller
     public function register(Request $request): JsonResponse
     {
         try {
+            $passwordRules = [
+                'required',
+                'string',
+                'min:8',
+                'confirmed',
+                'regex:/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]+$/'
+            ];
+
             // Validasi input
             $validated = $request->validate([
                 'username' => 'required|string|max:255|unique:user,username',
                 'name' => 'required|string|max:255',
                 'email' => 'required|string|email|max:255|unique:user,email',
-                'password' => 'required|string|min:8|confirmed',
+                'password' => $passwordRules,
                 'role' => 'required|string|in:penulis,pembaca'
             ]);
 

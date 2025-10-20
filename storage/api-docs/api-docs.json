@@ -54,12 +54,12 @@
                                     "password": {
                                         "type": "string",
                                         "format": "password",
-                                        "example": "password123"
+                                        "example": "P@ssW0rd3"
                                     },
                                     "password_confirmation": {
                                         "type": "string",
                                         "format": "password",
-                                        "example": "password123"
+                                        "example": "P@ssW0rd3"
                                     },
                                     "role": {
                                         "type": "string",
@@ -1463,12 +1463,12 @@
                                     "old_password": {
                                         "type": "string",
                                         "format": "password",
-                                        "example": "oldpass123"
+                                        "example": "P@ssW0rd3"
                                     },
                                     "new_password": {
                                         "type": "string",
                                         "format": "password",
-                                        "example": "newpass123"
+                                        "example": "newP@ssW0rd3"
                                     }
                                 },
                                 "type": "object"

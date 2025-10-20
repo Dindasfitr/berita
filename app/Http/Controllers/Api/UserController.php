@@ -116,8 +116,8 @@ class UserController extends Controller
      *             @OA\Property(property="username", type="string", example="johndoe"),
      *             @OA\Property(property="name", type="string", example="John Doe"),
      *             @OA\Property(property="email", type="string", example="john@example.com"),
-     *             @OA\Property(property="old_password", type="string", format="password", example="oldpass123"),
-     *             @OA\Property(property="new_password", type="string", format="password", example="newpass123")
+     *             @OA\Property(property="old_password", type="string", format="password", example="P@ssW0rd3"),
+     *             @OA\Property(property="new_password", type="string", format="password", example="newP@ssW0rd3")
      *         )
      *     ),
      *     @OA\Response(
@@ -152,7 +152,12 @@ class UserController extends Controller
             'name' => 'sometimes|string|max:255',
             'email' => 'sometimes|string|email|max:255',
             'old_password' => 'sometimes|required_with:new_password|string',
-            'new_password' => 'sometimes|string|min:8'
+            'new_password' => [
+                'sometimes',
+                'string',
+                'min:8',
+                'regex:/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&.,#^()_\-+=])[A-Za-z\d@$!%*?&.,#^()_\-+=]{8,}$/'
+            ],
         ]);
 
         if ($request->filled('new_password')) {
