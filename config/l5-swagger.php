@@ -208,13 +208,13 @@ return [
                         ],
                     ],
                 ],
-                'sanctum' => [ // Unique name of security
-                    'type' => 'apiKey', // Valid values are "basic", "apiKey" or "oauth2".
-                    'description' => 'Enter token in format (Bearer <token>)',
-                    'name' => 'Authorization', // The name of the header or query parameter to be used.
-                    'in' => 'header', // The location of the API key. Valid values are "query" or "header".
-                ],
                 */
+                'sanctum' => [ // Unique name of security
+                    'type' => 'http', // The type of the security scheme.
+                    'scheme' => 'bearer', // The name of the HTTP Authentication scheme.
+                    'description' => 'Enter your Bearer token',
+                    'bearerFormat' => 'JWT', // Optional: Format of the bearer token.
+                ],
             ],
             'security' => [
                 /*

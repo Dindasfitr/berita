@@ -50,9 +50,24 @@ class BeritaController extends Controller
      *     )
      * )
      */
-    public function index(): JsonResponse
+    public function index(Request $request): JsonResponse
     {
-        $berita = Berita::with('kategori')->get()->map(function ($item) {
+        $user = $request->user(); // Ambil user yang sedang login (jika ada)
+
+        $query = Berita::with('kategori');
+
+        // Jika user tidak login atau guest, hanya tampilkan berita non-premium
+        if (!$user || $user->membership === 'guest') {
+            $query->where('is_premium', false);
+        } elseif ($user->membership === 'free') {
+            // Free user: bisa lihat berita non-premium dan beberapa premium (misal limit 5)
+            $query->where(function ($q) {
+                $q->where('is_premium', false)
+                  ->orWhere('is_premium', true); // Untuk demo, free bisa lihat semua, tapi di real bisa limit
+            });
+        } // Premium bisa lihat semua
+
+        $berita = $query->get()->map(function ($item) {
             $penulis = User::find($item->id_user);
 
             return [
@@ -63,6 +78,7 @@ class BeritaController extends Controller
                 'isi' => $item->isi,
                 'gambar' => $item->gambar,
                 'tgl_terbit' => $item->tgl_terbit,
+                'is_premium' => $item->is_premium,
                 'penulis' => $penulis ? [
                     'id_user' => $penulis->id_user,
                     'username' => $penulis->username,
@@ -120,12 +136,23 @@ class BeritaController extends Controller
      *     )
      * )
      */
-    public function show($id_berita): JsonResponse
+    public function show(Request $request, $id_berita): JsonResponse
     {
         $berita = Berita::with('kategori')->find($id_berita);
 
         if (!$berita) {
             return response()->json(['error' => 'Berita tidak ditemukan'], 404);
+        }
+
+        $user = $request->user();
+
+        // Cek akses berdasarkan membership
+        if ($berita->is_premium) {
+            if (!$user || $user->membership === 'guest') {
+                return response()->json(['error' => 'Akses ditolak: Berita premium hanya untuk user login'], 403);
+            } elseif ($user->membership === 'free') {
+                // Untuk demo, free bisa akses, tapi di real bisa batasi
+            } // Premium bisa akses
         }
 
         $penulis = \App\Models\User::find($berita->id_user); // Ambil penulis dari tabel user
@@ -138,6 +165,7 @@ class BeritaController extends Controller
             'isi' => $berita->isi,
             'gambar' => $berita->gambar,
             'tgl_terbit' => $berita->tgl_terbit,
+            'is_premium' => $berita->is_premium,
             'penulis' => $penulis ? [
                 'id_user' => $penulis->id_user,
                 'username' => $penulis->username,
@@ -207,20 +235,20 @@ class BeritaController extends Controller
      *     path="/berita",
      *     tags={"Berita"},
      *     summary="Create new news",
-     *     description="Menambahkan berita baru",
+     *     description="Menambahkan berita baru. Hanya penulis dan admin yang bisa membuat berita. id_user akan diambil dari user yang sedang login.",
+     *     security={{"sanctum":{}}},
      *     @OA\RequestBody(
      *         required=true,
      *         @OA\MediaType(
      *             mediaType="multipart/form-data",
      *             @OA\Schema(
-     *                 required={"id_user", "id_kategori", "judul", "isi", "tgl_terbit"},
-     *                 @OA\Property(property="id_user", type="integer", example=1),
-     *                 @OA\Property(property="id_kategori", type="integer", example=1),
-     *                 @OA\Property(property="judul", type="string", example="Berita Terkini"),
-     *                 @OA\Property(property="isi", type="string", example="Isi berita..."),
-     *                 @OA\Property(property="gambar", type="string", format="binary"),
-     *                 @OA\Property(property="tgl_terbit", type="string", format="date", example="2025-01-01"),
-     *                 @OA\Property(property="is_premium", type="boolean", example=false),
+     *                 required={"id_kategori", "judul", "isi", "tgl_terbit"},
+     *                 @OA\Property(property="id_kategori", type="integer", example=1, description="ID kategori berita"),
+     *                 @OA\Property(property="judul", type="string", example="Berita Terkini", description="Judul berita"),
+     *                 @OA\Property(property="isi", type="string", example="Isi berita...", description="Konten berita"),
+     *                 @OA\Property(property="gambar", type="string", format="binary", description="File gambar berita (opsional)"),
+     *                 @OA\Property(property="tgl_terbit", type="string", format="date", example="2025-01-01", description="Tanggal terbit berita"),
+     *                 @OA\Property(property="is_premium", type="boolean", example=false, description="Apakah berita premium (default: false)"),
      *             )
      *         )
      *     ),
@@ -229,7 +257,7 @@ class BeritaController extends Controller
      *         description="Berita berhasil dibuat",
      *         @OA\JsonContent(
      *             @OA\Property(property="id_berita", type="integer", example=1),
-     *             @OA\Property(property="id_user", type="integer", example=1),
+     *             @OA\Property(property="id_user", type="integer", example=1, description="ID penulis (diambil dari user login)"),
      *             @OA\Property(property="id_kategori", type="integer", example=1),
      *             @OA\Property(property="judul", type="string", example="Berita Terkini"),
      *             @OA\Property(property="isi", type="string", example="Isi berita..."),
@@ -237,22 +265,44 @@ class BeritaController extends Controller
      *             @OA\Property(property="tgl_terbit", type="string", format="date", example="2025-01-01"),
      *             @OA\Property(property="is_premium", type="boolean", example=false)
      *         )
+     *     ),
+     *     @OA\Response(
+     *         response=403,
+     *         description="Akses ditolak: Hanya penulis dan admin yang bisa membuat berita",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="error", type="string", example="Akses ditolak: Hanya penulis dan admin yang bisa membuat berita")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=401,
+     *         description="Unauthorized",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="message", type="string", example="Unauthenticated.")
+     *         )
      *     )
      * )
      */
     public function store(Request $request): JsonResponse
     {
+        $user = $request->user();
+
+        // Cek role: hanya penulis dan admin yang bisa buat berita
+        if (!$user || !in_array($user->role, ['penulis', 'admin'])) {
+            return response()->json(['error' => 'Akses ditolak: Hanya penulis dan admin yang bisa membuat berita'], 403);
+        }
+
         $request->validate([
-            'id_user' => 'required|integer|exists:user,id_user',
             'id_kategori' => 'required|integer|exists:kategori,id_kategori',
             'judul' => 'required|string|max:255',
             'isi' => 'required|string',
             'gambar' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
             'tgl_terbit' => 'required|date',
-            'id_premium' => 'nullable|boolean'
+            'is_premium' => 'sometimes|in:0,1,true,false'
         ]);
 
-        $data = $request->only(['id_user', 'id_kategori', 'judul', 'isi', 'tgl_terbit']);
+        $data = $request->only(['id_kategori', 'judul', 'isi', 'tgl_terbit']);
+        $data['is_premium'] = $request->boolean('is_premium', false); // Default false jika tidak ada
+        $data['id_user'] = $user->id_user; // Set id_user dari user yang login
 
         // Handle image upload
         if ($request->hasFile('gambar')) {
@@ -269,11 +319,12 @@ class BeritaController extends Controller
 
 
     /**
-     * @OA\Post(
+     * @OA\Put(
      *     path="/berita/{id_berita}",
      *     tags={"Berita"},
      *     summary="Update news",
-     *     description="Mengubah data berita (gunakan POST dengan _method=PUT untuk upload file)",
+     *     description="Mengubah data berita. Hanya penulis pemilik berita atau admin yang bisa mengedit.",
+     *     security={{"sanctum":{}}},
      *     @OA\Parameter(
      *         name="id_berita",
      *         in="path",
@@ -286,22 +337,50 @@ class BeritaController extends Controller
      *         @OA\MediaType(
      *             mediaType="multipart/form-data",
      *             @OA\Schema(
-     *                 @OA\Property(property="id_user", type="integer", example=1),
-     *                 @OA\Property(property="id_kategori", type="integer", example=1),
-     *                 @OA\Property(property="judul", type="string", example="Berita Terkini"),
-     *                 @OA\Property(property="isi", type="string", example="Isi berita..."),
-     *                 @OA\Property(property="gambar", type="string", format="binary"),
-     *                 @OA\Property(property="tgl_terbit", type="string", format="date", example="2025-01-01")
+     *                 required={"id_kategori", "judul", "isi", "tgl_terbit"},
+     *                 @OA\Property(property="id_kategori", type="integer", example=1, description="ID kategori berita"),
+     *                 @OA\Property(property="judul", type="string", example="Berita Terkini", description="Judul berita"),
+     *                 @OA\Property(property="isi", type="string", example="Isi berita...", description="Konten berita"),
+     *                 @OA\Property(property="gambar", type="string", format="binary", description="File gambar berita (opsional)"),
+     *                 @OA\Property(property="tgl_terbit", type="string", format="date", example="2025-01-01", description="Tanggal terbit berita"),
+     *                 @OA\Property(property="is_premium", type="boolean", example=false, description="Apakah berita premium (default: false)")
      *             )
      *         )
      *     ),
      *     @OA\Response(
      *         response=200,
-     *         description="Berita berhasil diupdate"
+     *         description="Berita berhasil diupdate",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="id_berita", type="integer", example=1),
+     *             @OA\Property(property="id_user", type="integer", example=1),
+     *             @OA\Property(property="id_kategori", type="integer", example=1),
+     *             @OA\Property(property="judul", type="string", example="Berita Terkini"),
+     *             @OA\Property(property="isi", type="string", example="Isi berita..."),
+     *             @OA\Property(property="gambar", type="string", example="image.jpg"),
+     *             @OA\Property(property="tgl_terbit", type="string", format="date", example="2025-01-01"),
+     *             @OA\Property(property="is_premium", type="boolean", example=false)
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=403,
+     *         description="Akses ditolak: Hanya penulis berita atau admin yang bisa mengedit",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="error", type="string", example="Akses ditolak: Hanya penulis berita atau admin yang bisa mengedit")
+     *         )
      *     ),
      *     @OA\Response(
      *         response=404,
-     *         description="Berita tidak ditemukan"
+     *         description="Berita tidak ditemukan",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="error", type="string", example="Berita tidak ditemukan")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=401,
+     *         description="Unauthorized",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="message", type="string", example="Unauthenticated.")
+     *         )
      *     )
      * )
      */
@@ -312,21 +391,37 @@ class BeritaController extends Controller
             return response()->json(['error' => 'Berita tidak ditemukan'], 404);
         }
 
+        $user = $request->user();
+
+        // Cek role: hanya penulis yang punya berita ini atau admin yang bisa edit
+        if (!$user || ($user->role !== 'admin' && $berita->id_user !== $user->id_user)) {
+            return response()->json(['error' => 'Akses ditolak: Hanya penulis berita atau admin yang bisa mengedit'], 403);
+        }
+
         $request->validate([
-            'id_user' => 'sometimes|required|integer',
-            'id_kategori' => 'sometimes|required|integer|exists:kategori,id_kategori',
-            'judul' => 'sometimes|required|string|max:255',
-            'isi' => 'sometimes|required|string',
+            'id_kategori' => 'sometimes|integer|exists:kategori,id_kategori',
+            'judul' => 'sometimes|string|max:255',
+            'isi' => 'sometimes|string',
             'gambar' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
-            'tgl_terbit' => 'sometimes|required|date'
+            'tgl_terbit' => 'sometimes|date',
+            'is_premium' => 'sometimes|in:0,1,true,false'
         ]);
 
-        $data = $request->all(); // ambil semua field, termasuk yang dikirim via multipart
-
-        foreach (['id_user', 'id_kategori', 'judul', 'isi', 'tgl_terbit'] as $field) {
-            if (isset($data[$field])) {
-                $berita->$field = $data[$field];
-            }
+        // Update fields only if provided
+        if ($request->has('id_kategori') && $request->filled('id_kategori')) {
+            $berita->id_kategori = $request->input('id_kategori');
+        }
+        if ($request->has('judul') && $request->filled('judul')) {
+            $berita->judul = $request->input('judul');
+        }
+        if ($request->has('isi') && $request->filled('isi')) {
+            $berita->isi = $request->input('isi');
+        }
+        if ($request->has('tgl_terbit') && $request->filled('tgl_terbit')) {
+            $berita->tgl_terbit = $request->input('tgl_terbit');
+        }
+        if ($request->has('is_premium')) {
+            $berita->is_premium = $request->boolean('is_premium');
         }
 
         // Handle image upload
@@ -342,17 +437,220 @@ class BeritaController extends Controller
 
         $berita->save();
 
-        return response()->json($berita);
+        return response()->json([
+            'id_berita' => $berita->id_berita,
+            'id_user' => $berita->id_user,
+            'id_kategori' => $berita->id_kategori,
+            'judul' => $berita->judul,
+            'isi' => $berita->isi,
+            'gambar' => $berita->gambar,
+            'tgl_terbit' => $berita->tgl_terbit,
+            'is_premium' => $berita->is_premium,
+            'penulis' => User::find($berita->id_user) ? [
+                'id_user' => User::find($berita->id_user)->id_user,
+                'username' => User::find($berita->id_user)->username,
+                'name' => User::find($berita->id_user)->name,
+                'email' => User::find($berita->id_user)->email,
+                'role' => User::find($berita->id_user)->role
+            ] : null,
+            'kategori' => $berita->kategori
+        ]);
     }
 
 
+
+    /**
+     * @OA\Get(
+     *     path="/berita/category/{id_kategori}",
+     *     tags={"Berita"},
+     *     summary="Get news by category",
+     *     description="Mengambil daftar berita berdasarkan kategori dengan relasi penulis dan kategori, termasuk kontrol akses premium",
+     *     @OA\Parameter(
+     *         name="id_kategori",
+     *         in="path",
+     *         description="ID kategori",
+     *         required=true,
+     *         @OA\Schema(type="integer", example=1)
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="List berita berdasarkan kategori",
+     *         @OA\JsonContent(
+     *             type="array",
+     *             @OA\Items(
+     *                 @OA\Property(property="id_berita", type="integer", example=1),
+     *                 @OA\Property(property="id_user", type="integer", example=1),
+     *                 @OA\Property(property="id_kategori", type="integer", example=1),
+     *                 @OA\Property(property="judul", type="string", example="Berita Terkini"),
+     *                 @OA\Property(property="isi", type="string", example="Isi berita..."),
+     *                 @OA\Property(property="gambar", type="string", example="image.jpg"),
+     *                 @OA\Property(property="tgl_terbit", type="string", format="date", example="2025-01-01"),
+     *                 @OA\Property(property="is_premium", type="boolean", example=false),
+     *                 @OA\Property(
+     *                     property="penulis",
+     *                     type="object",
+     *                     @OA\Property(property="id_user", type="integer", example=1),
+     *                     @OA\Property(property="username", type="string", example="johndoe"),
+     *                     @OA\Property(property="name", type="string", example="John Doe"),
+     *                     @OA\Property(property="email", type="string", example="john@example.com"),
+     *                     @OA\Property(property="role", type="string", example="penulis")
+     *                 ),
+     *                 @OA\Property(property="kategori", type="object")
+     *             )
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=404,
+     *         description="Kategori tidak ditemukan"
+     *     )
+     * )
+     */
+    public function getByCategory(Request $request, $id_kategori): JsonResponse
+    {
+        $user = $request->user();
+
+        $query = Berita::with('kategori')->where('id_kategori', $id_kategori);
+
+        // Jika user tidak login atau guest, hanya tampilkan berita non-premium
+        if (!$user || $user->membership === 'guest') {
+            $query->where('is_premium', false);
+        } elseif ($user->membership === 'free') {
+            // Free user: bisa lihat berita non-premium dan beberapa premium (misal limit 5)
+            $query->where(function ($q) {
+                $q->where('is_premium', false)
+                  ->orWhere('is_premium', true); // Untuk demo, free bisa lihat semua, tapi di real bisa limit
+            });
+        } // Premium bisa lihat semua
+
+        $berita = $query->get()->map(function ($item) {
+            $penulis = User::find($item->id_user);
+
+            return [
+                'id_berita' => $item->id_berita,
+                'id_user' => $item->id_user,
+                'id_kategori' => $item->id_kategori,
+                'judul' => $item->judul,
+                'isi' => $item->isi,
+                'gambar' => $item->gambar,
+                'tgl_terbit' => $item->tgl_terbit,
+                'is_premium' => $item->is_premium,
+                'penulis' => $penulis ? [
+                    'id_user' => $penulis->id_user,
+                    'username' => $penulis->username,
+                    'name' => $penulis->name,
+                    'email' => $penulis->email,
+                    'role' => $penulis->role
+                ] : null,
+                'kategori' => $item->kategori
+            ];
+        });
+
+        return response()->json($berita);
+    }
+
+    /**
+     * @OA\Get(
+     *     path="/berita/search",
+     *     tags={"Berita"},
+     *     summary="Search news",
+     *     description="Mencari berita berdasarkan judul atau isi dengan relasi penulis dan kategori, termasuk kontrol akses premium",
+     *     @OA\Parameter(
+     *         name="q",
+     *         in="query",
+     *         description="Keyword pencarian",
+     *         required=true,
+     *         @OA\Schema(type="string", example="politik")
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="List berita hasil pencarian",
+     *         @OA\JsonContent(
+     *             type="array",
+     *             @OA\Items(
+     *                 @OA\Property(property="id_berita", type="integer", example=1),
+     *                 @OA\Property(property="id_user", type="integer", example=1),
+     *                 @OA\Property(property="id_kategori", type="integer", example=1),
+     *                 @OA\Property(property="judul", type="string", example="Berita Terkini"),
+     *                 @OA\Property(property="isi", type="string", example="Isi berita..."),
+     *                 @OA\Property(property="gambar", type="string", example="image.jpg"),
+     *                 @OA\Property(property="tgl_terbit", type="string", format="date", example="2025-01-01"),
+     *                 @OA\Property(property="is_premium", type="boolean", example=false),
+     *                 @OA\Property(
+     *                     property="penulis",
+     *                     type="object",
+     *                     @OA\Property(property="id_user", type="integer", example=1),
+     *                     @OA\Property(property="username", type="string", example="johndoe"),
+     *                     @OA\Property(property="name", type="string", example="John Doe"),
+     *                     @OA\Property(property="email", type="string", example="john@example.com"),
+     *                     @OA\Property(property="role", type="string", example="penulis")
+     *                 ),
+     *                 @OA\Property(property="kategori", type="object")
+     *             )
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=400,
+     *         description="Keyword pencarian diperlukan"
+     *     )
+     * )
+     */
+    public function search(Request $request): JsonResponse
+    {
+        $q = $request->query('q');
+        if (!$q) {
+            return response()->json(['error' => 'Keyword pencarian diperlukan'], 400);
+        }
+
+        $user = $request->user();
+
+        $query = Berita::with('kategori')
+            ->where('judul', 'like', '%' . $q . '%')
+            ->orWhere('isi', 'like', '%' . $q . '%');
+
+        // Jika user tidak login atau guest, hanya tampilkan berita non-premium
+        if (!$user || $user->membership === 'guest') {
+            $query->where('is_premium', false);
+        } elseif ($user->membership === 'free') {
+            // Free user: bisa lihat berita non-premium dan beberapa premium (misal limit 5)
+            $query->where(function ($q) {
+                $q->where('is_premium', false)
+                  ->orWhere('is_premium', true); // Untuk demo, free bisa lihat semua, tapi di real bisa limit
+            });
+        } // Premium bisa lihat semua
+
+        $berita = $query->get()->map(function ($item) {
+            $penulis = User::find($item->id_user);
+
+            return [
+                'id_berita' => $item->id_berita,
+                'id_user' => $item->id_user,
+                'id_kategori' => $item->id_kategori,
+                'judul' => $item->judul,
+                'isi' => $item->isi,
+                'gambar' => $item->gambar,
+                'tgl_terbit' => $item->tgl_terbit,
+                'is_premium' => $item->is_premium,
+                'penulis' => $penulis ? [
+                    'id_user' => $penulis->id_user,
+                    'username' => $penulis->username,
+                    'name' => $penulis->name,
+                    'email' => $penulis->email,
+                    'role' => $penulis->role
+                ] : null,
+                'kategori' => $item->kategori
+            ];
+        });
+
+        return response()->json($berita);
+    }
 
     /**
      * @OA\Delete(
      *     path="/berita/{id_berita}",
      *     tags={"Berita"},
      *     summary="Delete news",
-     *     description="Menghapus berita",
+     *     description="Menghapus berita. Admin bisa menghapus semua berita, penulis bisa menghapus berita sendiri.",
+     *     security={{"sanctum":{}}},
      *     @OA\Parameter(
      *         name="id_berita",
      *         in="path",
@@ -361,19 +659,46 @@ class BeritaController extends Controller
      *     ),
      *     @OA\Response(
      *         response=200,
-     *         description="Berita berhasil dihapus"
+     *         description="Berita berhasil dihapus",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="message", type="string", example="Berita berhasil dihapus")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=403,
+     *         description="Akses ditolak: Hanya admin atau penulis pemilik berita yang bisa menghapus",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="error", type="string", example="Akses ditolak: Hanya admin atau penulis pemilik berita yang bisa menghapus")
+     *         )
      *     ),
      *     @OA\Response(
      *         response=404,
-     *         description="Berita tidak ditemukan"
+     *         description="Berita tidak ditemukan",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="error", type="string", example="Berita tidak ditemukan")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=401,
+     *         description="Unauthorized",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="message", type="string", example="Unauthenticated.")
+     *         )
      *     )
      * )
      */
-    public function destroy($id_berita): JsonResponse
+    public function destroy(Request $request, $id_berita): JsonResponse
     {
         $berita = Berita::find($id_berita);
         if (!$berita) {
             return response()->json(['error' => 'Berita tidak ditemukan'], 404);
+        }
+
+        $user = $request->user();
+
+        // Cek role: admin bisa hapus semua berita, penulis bisa hapus berita sendiri
+        if (!$user || ($user->role !== 'admin' && $berita->id_user !== $user->id_user)) {
+            return response()->json(['error' => 'Akses ditolak: Hanya admin atau penulis pemilik berita yang bisa menghapus'], 403);
         }
 
         // Delete image if exists

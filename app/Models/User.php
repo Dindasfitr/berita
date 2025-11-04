@@ -23,6 +23,7 @@ class User extends Authenticatable
         'password',
         'role',
         'membership',
+        'foto_profil',
     ];
 
     protected $hidden = [
@@ -68,5 +69,10 @@ class User extends Authenticatable
     public function isPremium()
     {
         return $this->membership === 'premium';
+    }
+
+    public function berita()
+    {
+        return $this->hasMany(Berita::class, 'id_user', 'id_user');
     }
 }

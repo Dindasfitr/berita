@@ -22,7 +22,7 @@ class Berita extends Model
 
     public function penulis()
     {
-        return $this->belongsTo(User::class, 'id_penulis');
+        return $this->belongsTo(User::class, 'id_user');
     }
 
     public function kategori()

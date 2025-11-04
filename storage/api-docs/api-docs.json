@@ -16,6 +16,93 @@
         }
     ],
     "paths": {
+        "/analytics/dashboard": {
+            "get": {
+                "tags": [
+                    "Analytics"
+                ],
+                "summary": "Dashboard analytics (khusus admin)",
+                "description": "Statistik umum untuk dashboard admin",
+                "operationId": "60d2bed1d73ca56b203b6e5ed729ca67",
+                "responses": {
+                    "200": {
+                        "description": "Dashboard statistics",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "total_users": {
+                                            "type": "integer"
+                                        },
+                                        "total_berita": {
+                                            "type": "integer"
+                                        },
+                                        "total_likes": {
+                                            "type": "integer"
+                                        },
+                                        "total_views": {
+                                            "type": "integer"
+                                        },
+                                        "users_by_role": {
+                                            "type": "object"
+                                        },
+                                        "users_by_membership": {
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/analytics/users": {
+            "get": {
+                "tags": [
+                    "Analytics"
+                ],
+                "summary": "Analytics user (khusus admin)",
+                "description": "Statistik detail tentang user",
+                "operationId": "7f4e4f64239eda36ff5d468197d2ca93",
+                "responses": {
+                    "200": {
+                        "description": "User analytics"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/analytics/content": {
+            "get": {
+                "tags": [
+                    "Analytics"
+                ],
+                "summary": "Analytics konten (khusus admin)",
+                "description": "Statistik detail tentang konten berita",
+                "operationId": "044d7ecde74caa2ad910a585e200676e",
+                "responses": {
+                    "200": {
+                        "description": "Content analytics"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
         "/register": {
             "post": {
                 "tags": [
@@ -125,6 +212,10 @@
                                                 "membership": {
                                                     "type": "string",
                                                     "example": "free"
+                                                },
+                                                "foto_profil": {
+                                                    "type": "string",
+                                                    "example": "profile.jpg"
                                                 }
                                             },
                                             "type": "object"
@@ -171,6 +262,107 @@
                                         "message": {
                                             "type": "string",
                                             "example": "Terjadi kesalahan saat registrasi"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/login": {
+            "post": {
+                "tags": [
+                    "Authentication"
+                ],
+                "summary": "Login user",
+                "description": "Login user dengan email, password, dan role. Mengembalikan access token untuk autentikasi selanjutnya.",
+                "operationId": "67d6d0fdd54fba132e1b6f55ca254183",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "email",
+                                    "password",
+                                    "role"
+                                ],
+                                "properties": {
+                                    "email": {
+                                        "type": "string",
+                                        "format": "email",
+                                        "example": "john@example.com"
+                                    },
+                                    "password": {
+                                        "type": "string",
+                                        "format": "password",
+                                        "example": "P@ssW0rd3"
+                                    },
+                                    "role": {
+                                        "type": "string",
+                                        "enum": [
+                                            "admin",
+                                            "penulis",
+                                            "pembaca"
+                                        ],
+                                        "example": "pembaca"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Login berhasil",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Login berhasil"
+                                        },
+                                        "access_token": {
+                                            "type": "string",
+                                            "example": "1|abc123..."
+                                        },
+                                        "token_type": {
+                                            "type": "string",
+                                            "example": "Bearer"
+                                        },
+                                        "role": {
+                                            "type": "string",
+                                            "example": "pembaca"
+                                        },
+                                        "membership": {
+                                            "type": "string",
+                                            "example": "free"
+                                        },
+                                        "foto_profil": {
+                                            "type": "string",
+                                            "example": "profil/1234567890_image.jpg",
+                                            "nullable": true
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Email, password, atau role salah",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Email, password, atau role salah"
                                         }
                                     },
                                     "type": "object"
@@ -265,7 +457,7 @@
                     "Berita"
                 ],
                 "summary": "Create new news",
-                "description": "Menambahkan berita baru",
+                "description": "Menambahkan berita baru. Hanya penulis dan admin yang bisa membuat berita. id_user akan diambil dari user yang sedang login.",
                 "operationId": "652e3f1e832bc19bd49db68176f32baf",
                 "requestBody": {
                     "required": true,
@@ -273,39 +465,40 @@
                         "multipart/form-data": {
                             "schema": {
                                 "required": [
-                                    "id_user",
                                     "id_kategori",
                                     "judul",
                                     "isi",
                                     "tgl_terbit"
                                 ],
                                 "properties": {
-                                    "id_user": {
-                                        "type": "integer",
-                                        "example": 1
-                                    },
                                     "id_kategori": {
+                                        "description": "ID kategori berita",
                                         "type": "integer",
                                         "example": 1
                                     },
                                     "judul": {
+                                        "description": "Judul berita",
                                         "type": "string",
                                         "example": "Berita Terkini"
                                     },
                                     "isi": {
+                                        "description": "Konten berita",
                                         "type": "string",
                                         "example": "Isi berita..."
                                     },
                                     "gambar": {
+                                        "description": "File gambar berita (opsional)",
                                         "type": "string",
                                         "format": "binary"
                                     },
                                     "tgl_terbit": {
+                                        "description": "Tanggal terbit berita",
                                         "type": "string",
                                         "format": "date",
                                         "example": "2025-01-01"
                                     },
                                     "is_premium": {
+                                        "description": "Apakah berita premium (default: false)",
                                         "type": "boolean",
                                         "example": false
                                     }
@@ -327,6 +520,7 @@
                                             "example": 1
                                         },
                                         "id_user": {
+                                            "description": "ID penulis (diambil dari user login)",
                                             "type": "integer",
                                             "example": 1
                                         },
@@ -360,8 +554,45 @@
                                 }
                             }
                         }
+                    },
+                    "403": {
+                        "description": "Akses ditolak: Hanya penulis dan admin yang bisa membuat berita",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "error": {
+                                            "type": "string",
+                                            "example": "Akses ditolak: Hanya penulis dan admin yang bisa membuat berita"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Unauthenticated."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
                     }
-                }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
             }
         },
         "/berita/{id_berita}": {
@@ -459,13 +690,13 @@
                     }
                 }
             },
-            "post": {
+            "put": {
                 "tags": [
                     "Berita"
                 ],
                 "summary": "Update news",
-                "description": "Mengubah data berita (gunakan POST dengan _method=PUT untuk upload file)",
-                "operationId": "db2e10d4931786042a13b15b1aa26ec1",
+                "description": "Mengubah data berita. Hanya penulis pemilik berita atau admin yang bisa mengedit.",
+                "operationId": "1cc54840f9f78b40cec984b41ad56b99",
                 "parameters": [
                     {
                         "name": "id_berita",
@@ -483,31 +714,43 @@
                     "content": {
                         "multipart/form-data": {
                             "schema": {
+                                "required": [
+                                    "id_kategori",
+                                    "judul",
+                                    "isi",
+                                    "tgl_terbit"
+                                ],
                                 "properties": {
-                                    "id_user": {
-                                        "type": "integer",
-                                        "example": 1
-                                    },
                                     "id_kategori": {
+                                        "description": "ID kategori berita",
                                         "type": "integer",
                                         "example": 1
                                     },
                                     "judul": {
+                                        "description": "Judul berita",
                                         "type": "string",
                                         "example": "Berita Terkini"
                                     },
                                     "isi": {
+                                        "description": "Konten berita",
                                         "type": "string",
                                         "example": "Isi berita..."
                                     },
                                     "gambar": {
+                                        "description": "File gambar berita (opsional)",
                                         "type": "string",
                                         "format": "binary"
                                     },
                                     "tgl_terbit": {
+                                        "description": "Tanggal terbit berita",
                                         "type": "string",
                                         "format": "date",
                                         "example": "2025-01-01"
+                                    },
+                                    "is_premium": {
+                                        "description": "Apakah berita premium (default: false)",
+                                        "type": "boolean",
+                                        "example": false
                                     }
                                 },
                                 "type": "object"
@@ -517,19 +760,111 @@
                 },
                 "responses": {
                     "200": {
-                        "description": "Berita berhasil diupdate"
+                        "description": "Berita berhasil diupdate",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "id_berita": {
+                                            "type": "integer",
+                                            "example": 1
+                                        },
+                                        "id_user": {
+                                            "type": "integer",
+                                            "example": 1
+                                        },
+                                        "id_kategori": {
+                                            "type": "integer",
+                                            "example": 1
+                                        },
+                                        "judul": {
+                                            "type": "string",
+                                            "example": "Berita Terkini"
+                                        },
+                                        "isi": {
+                                            "type": "string",
+                                            "example": "Isi berita..."
+                                        },
+                                        "gambar": {
+                                            "type": "string",
+                                            "example": "image.jpg"
+                                        },
+                                        "tgl_terbit": {
+                                            "type": "string",
+                                            "format": "date",
+                                            "example": "2025-01-01"
+                                        },
+                                        "is_premium": {
+                                            "type": "boolean",
+                                            "example": false
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Akses ditolak: Hanya penulis berita atau admin yang bisa mengedit",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "error": {
+                                            "type": "string",
+                                            "example": "Akses ditolak: Hanya penulis berita atau admin yang bisa mengedit"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
                     },
                     "404": {
-                        "description": "Berita tidak ditemukan"
+                        "description": "Berita tidak ditemukan",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "error": {
+                                            "type": "string",
+                                            "example": "Berita tidak ditemukan"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Unauthenticated."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
                     }
-                }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
             },
             "delete": {
                 "tags": [
                     "Berita"
                 ],
                 "summary": "Delete news",
-                "description": "Menghapus berita",
+                "description": "Menghapus berita. Admin bisa menghapus semua berita, penulis bisa menghapus berita sendiri.",
                 "operationId": "a5b4402490af0eeccd96414fabf18f23",
                 "parameters": [
                     {
@@ -544,12 +879,75 @@
                 ],
                 "responses": {
                     "200": {
-                        "description": "Berita berhasil dihapus"
+                        "description": "Berita berhasil dihapus",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Berita berhasil dihapus"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Akses ditolak: Hanya admin atau penulis pemilik berita yang bisa menghapus",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "error": {
+                                            "type": "string",
+                                            "example": "Akses ditolak: Hanya admin atau penulis pemilik berita yang bisa menghapus"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
                     },
                     "404": {
-                        "description": "Berita tidak ditemukan"
+                        "description": "Berita tidak ditemukan",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "error": {
+                                            "type": "string",
+                                            "example": "Berita tidak ditemukan"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Unauthenticated."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
                     }
-                }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
             }
         },
         "/berita/user/{id_user}": {
@@ -624,6 +1022,317 @@
                         "description": "User tidak ditemukan atau tidak memiliki berita"
                     }
                 }
+            }
+        },
+        "/berita/category/{id_kategori}": {
+            "get": {
+                "tags": [
+                    "Berita"
+                ],
+                "summary": "Get news by category",
+                "description": "Mengambil daftar berita berdasarkan kategori dengan relasi penulis dan kategori, termasuk kontrol akses premium",
+                "operationId": "9f48534be6f6e296b16bf179a65f0c55",
+                "parameters": [
+                    {
+                        "name": "id_kategori",
+                        "in": "path",
+                        "description": "ID kategori",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 1
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "List berita berdasarkan kategori",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "properties": {
+                                            "id_berita": {
+                                                "type": "integer",
+                                                "example": 1
+                                            },
+                                            "id_user": {
+                                                "type": "integer",
+                                                "example": 1
+                                            },
+                                            "id_kategori": {
+                                                "type": "integer",
+                                                "example": 1
+                                            },
+                                            "judul": {
+                                                "type": "string",
+                                                "example": "Berita Terkini"
+                                            },
+                                            "isi": {
+                                                "type": "string",
+                                                "example": "Isi berita..."
+                                            },
+                                            "gambar": {
+                                                "type": "string",
+                                                "example": "image.jpg"
+                                            },
+                                            "tgl_terbit": {
+                                                "type": "string",
+                                                "format": "date",
+                                                "example": "2025-01-01"
+                                            },
+                                            "is_premium": {
+                                                "type": "boolean",
+                                                "example": false
+                                            },
+                                            "penulis": {
+                                                "properties": {
+                                                    "id_user": {
+                                                        "type": "integer",
+                                                        "example": 1
+                                                    },
+                                                    "username": {
+                                                        "type": "string",
+                                                        "example": "johndoe"
+                                                    },
+                                                    "name": {
+                                                        "type": "string",
+                                                        "example": "John Doe"
+                                                    },
+                                                    "email": {
+                                                        "type": "string",
+                                                        "example": "john@example.com"
+                                                    },
+                                                    "role": {
+                                                        "type": "string",
+                                                        "example": "penulis"
+                                                    }
+                                                },
+                                                "type": "object"
+                                            },
+                                            "kategori": {
+                                                "type": "object"
+                                            }
+                                        },
+                                        "type": "object"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Kategori tidak ditemukan"
+                    }
+                }
+            }
+        },
+        "/berita/search": {
+            "get": {
+                "tags": [
+                    "Berita"
+                ],
+                "summary": "Search news",
+                "description": "Mencari berita berdasarkan judul atau isi dengan relasi penulis dan kategori, termasuk kontrol akses premium",
+                "operationId": "c75405ee986a73bb5d04e4a160bcfc07",
+                "parameters": [
+                    {
+                        "name": "q",
+                        "in": "query",
+                        "description": "Keyword pencarian",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "example": "politik"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "List berita hasil pencarian",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "properties": {
+                                            "id_berita": {
+                                                "type": "integer",
+                                                "example": 1
+                                            },
+                                            "id_user": {
+                                                "type": "integer",
+                                                "example": 1
+                                            },
+                                            "id_kategori": {
+                                                "type": "integer",
+                                                "example": 1
+                                            },
+                                            "judul": {
+                                                "type": "string",
+                                                "example": "Berita Terkini"
+                                            },
+                                            "isi": {
+                                                "type": "string",
+                                                "example": "Isi berita..."
+                                            },
+                                            "gambar": {
+                                                "type": "string",
+                                                "example": "image.jpg"
+                                            },
+                                            "tgl_terbit": {
+                                                "type": "string",
+                                                "format": "date",
+                                                "example": "2025-01-01"
+                                            },
+                                            "is_premium": {
+                                                "type": "boolean",
+                                                "example": false
+                                            },
+                                            "penulis": {
+                                                "properties": {
+                                                    "id_user": {
+                                                        "type": "integer",
+                                                        "example": 1
+                                                    },
+                                                    "username": {
+                                                        "type": "string",
+                                                        "example": "johndoe"
+                                                    },
+                                                    "name": {
+                                                        "type": "string",
+                                                        "example": "John Doe"
+                                                    },
+                                                    "email": {
+                                                        "type": "string",
+                                                        "example": "john@example.com"
+                                                    },
+                                                    "role": {
+                                                        "type": "string",
+                                                        "example": "penulis"
+                                                    }
+                                                },
+                                                "type": "object"
+                                            },
+                                            "kategori": {
+                                                "type": "object"
+                                            }
+                                        },
+                                        "type": "object"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Keyword pencarian diperlukan"
+                    }
+                }
+            }
+        },
+        "/bookmarks": {
+            "get": {
+                "tags": [
+                    "Bookmark"
+                ],
+                "summary": "Get semua bookmark user",
+                "description": "Mengambil daftar berita yang di-bookmark oleh user yang sedang login",
+                "operationId": "0bd0fa02e03c1d1dc1b708e634fd30f1",
+                "responses": {
+                    "200": {
+                        "description": "List bookmark",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "properties": {
+                                            "id_bookmark": {
+                                                "type": "integer"
+                                            },
+                                            "berita": {
+                                                "type": "object"
+                                            }
+                                        },
+                                        "type": "object"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            },
+            "post": {
+                "tags": [
+                    "Bookmark"
+                ],
+                "summary": "Tambah bookmark",
+                "description": "Menambah berita ke bookmark user",
+                "operationId": "099337578aa8b34a064413eedd2c1d34",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "id_berita"
+                                ],
+                                "properties": {
+                                    "id_berita": {
+                                        "type": "integer",
+                                        "example": 1
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Bookmark berhasil ditambahkan"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/bookmarks/{id_bookmark}": {
+            "delete": {
+                "tags": [
+                    "Bookmark"
+                ],
+                "summary": "Hapus bookmark",
+                "description": "Menghapus berita dari bookmark user",
+                "operationId": "0714d46b41ab6bd885cf35e869e359a0",
+                "parameters": [
+                    {
+                        "name": "id_bookmark",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Bookmark berhasil dihapus"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
             }
         },
         "/likes": {
@@ -1446,48 +2155,54 @@
                 }
             }
         },
-        "/dislikes": {
+        "/notifications": {
             "get": {
                 "tags": [
-                    "TidakDisukai"
+                    "Notification"
                 ],
-                "summary": "Get all dislikes",
-                "description": "Mengambil semua data tidak disukai",
-                "operationId": "c53e6b54fa63349389c1127338fc26e2",
+                "summary": "Get notifikasi user",
+                "description": "Mengambil daftar notifikasi user yang sedang login",
+                "operationId": "b1274a2aaae8a4295a7e1925e8d8090f",
+                "parameters": [
+                    {
+                        "name": "read",
+                        "in": "query",
+                        "description": "Filter berdasarkan status baca (0=belum dibaca, 1=sudah dibaca)",
+                        "schema": {
+                            "type": "integer",
+                            "enum": [
+                                0,
+                                1
+                            ]
+                        }
+                    }
+                ],
                 "responses": {
                     "200": {
-                        "description": "List semua data tidak disukai",
+                        "description": "List notifikasi",
                         "content": {
                             "application/json": {
                                 "schema": {
                                     "type": "array",
                                     "items": {
                                         "properties": {
-                                            "id_tidaksuka": {
-                                                "type": "integer",
-                                                "example": 1
+                                            "id_notification": {
+                                                "type": "integer"
                                             },
-                                            "id_user": {
-                                                "type": "integer",
-                                                "example": 1
+                                            "title": {
+                                                "type": "string"
                                             },
-                                            "id_berita": {
-                                                "type": "integer",
-                                                "example": 1
+                                            "message": {
+                                                "type": "string"
                                             },
-                                            "tidak_suka": {
-                                                "type": "boolean",
-                                                "example": true
+                                            "type": {
+                                                "type": "string"
+                                            },
+                                            "is_read": {
+                                                "type": "boolean"
                                             },
                                             "created_at": {
-                                                "type": "string",
-                                                "format": "date-time",
-                                                "example": "2025-01-01T00:00:00Z"
-                                            },
-                                            "updated_at": {
-                                                "type": "string",
-                                                "format": "date-time",
-                                                "example": "2025-01-01T00:00:00Z"
+                                                "type": "string"
                                             }
                                         },
                                         "type": "object"
@@ -1496,36 +2211,163 @@
                             }
                         }
                     }
-                }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/notifications/{id_notification}/read": {
+            "put": {
+                "tags": [
+                    "Notification"
+                ],
+                "summary": "Tandai notifikasi sebagai sudah dibaca",
+                "description": "Menandai notifikasi tertentu sebagai sudah dibaca",
+                "operationId": "12c17fc5fa72d002fd853b6d6d4b55f6",
+                "parameters": [
+                    {
+                        "name": "id_notification",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Notifikasi berhasil ditandai sebagai sudah dibaca"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/notifications/read-all": {
+            "put": {
+                "tags": [
+                    "Notification"
+                ],
+                "summary": "Tandai semua notifikasi sebagai sudah dibaca",
+                "description": "Menandai semua notifikasi user sebagai sudah dibaca",
+                "operationId": "1c909390c7d97aa2aca778a2a6362450",
+                "responses": {
+                    "200": {
+                        "description": "Semua notifikasi berhasil ditandai sebagai sudah dibaca"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/notifications/{id_notification}": {
+            "delete": {
+                "tags": [
+                    "Notification"
+                ],
+                "summary": "Hapus notifikasi",
+                "description": "Menghapus notifikasi tertentu",
+                "operationId": "aad82355dc72e7b519c4cbd61eea312d",
+                "parameters": [
+                    {
+                        "name": "id_notification",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Notifikasi berhasil dihapus"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/reports": {
+            "get": {
+                "tags": [
+                    "Report"
+                ],
+                "summary": "Get laporan user (khusus admin)",
+                "description": "Mengambil daftar laporan untuk admin review",
+                "operationId": "81a8afd2aa3c69c6b5565682c3a78dd7",
+                "parameters": [
+                    {
+                        "name": "status",
+                        "in": "query",
+                        "description": "Filter berdasarkan status",
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "pending",
+                                "reviewed",
+                                "resolved"
+                            ]
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "List laporan"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
             },
             "post": {
                 "tags": [
-                    "TidakDisukai"
+                    "Report"
                 ],
-                "summary": "Create or toggle dislike",
-                "description": "Menambahkan data tidak disukai baru atau update jika sudah ada",
-                "operationId": "f11b8c38c9ada6c8104630654c85ea3c",
+                "summary": "Laporkan berita",
+                "description": "Melaporkan berita yang dianggap melanggar aturan",
+                "operationId": "39a2e936857d7fa55026c1daac0f01d0",
                 "requestBody": {
                     "required": true,
                     "content": {
                         "application/json": {
                             "schema": {
                                 "required": [
-                                    "id_user",
-                                    "id_berita"
+                                    "id_berita",
+                                    "reason"
                                 ],
                                 "properties": {
-                                    "id_user": {
-                                        "type": "integer",
-                                        "example": 1
-                                    },
                                     "id_berita": {
                                         "type": "integer",
                                         "example": 1
                                     },
-                                    "tidak_suka": {
-                                        "type": "boolean",
-                                        "example": true
+                                    "reason": {
+                                        "type": "string",
+                                        "enum": [
+                                            "spam",
+                                            "konten_tidak_pantast",
+                                            "hoax",
+                                            "pelanggaran_hak_cipta",
+                                            "lainnya"
+                                        ],
+                                        "example": "hoax"
+                                    },
+                                    "description": {
+                                        "type": "string",
+                                        "example": "Berita ini mengandung informasi yang salah"
                                     }
                                 },
                                 "type": "object"
@@ -1535,52 +2377,31 @@
                 },
                 "responses": {
                     "201": {
-                        "description": "Dislike berhasil dibuat atau diupdate",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "properties": {
-                                        "id_tidaksuka": {
-                                            "type": "integer",
-                                            "example": 1
-                                        },
-                                        "id_user": {
-                                            "type": "integer",
-                                            "example": 1
-                                        },
-                                        "id_berita": {
-                                            "type": "integer",
-                                            "example": 1
-                                        },
-                                        "tidak_suka": {
-                                            "type": "boolean",
-                                            "example": true
-                                        }
-                                    },
-                                    "type": "object"
-                                }
-                            }
-                        }
+                        "description": "Laporan berhasil dikirim"
                     }
-                }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
             }
         },
-        "/dislikes/{id_tidaksuka}": {
+        "/reports/{id_report}": {
             "put": {
                 "tags": [
-                    "TidakDisukai"
+                    "Report"
                 ],
-                "summary": "Update dislike",
-                "description": "Mengubah status tidak disukai",
-                "operationId": "e87e14de4eb7119c100c1cbf751a4ff4",
+                "summary": "Update status laporan (khusus admin)",
+                "description": "Admin mengupdate status laporan",
+                "operationId": "65c250474ec1be507d0255180418b5ce",
                 "parameters": [
                     {
-                        "name": "id_tidaksuka",
+                        "name": "id_report",
                         "in": "path",
                         "required": true,
                         "schema": {
-                            "type": "integer",
-                            "example": 1
+                            "type": "integer"
                         }
                     }
                 ],
@@ -1590,12 +2411,16 @@
                         "application/json": {
                             "schema": {
                                 "required": [
-                                    "tidak_suka"
+                                    "status"
                                 ],
                                 "properties": {
-                                    "tidak_suka": {
-                                        "type": "boolean",
-                                        "example": false
+                                    "status": {
+                                        "type": "string",
+                                        "enum": [
+                                            "pending",
+                                            "reviewed",
+                                            "resolved"
+                                        ]
                                     }
                                 },
                                 "type": "object"
@@ -1605,66 +2430,187 @@
                 },
                 "responses": {
                     "200": {
-                        "description": "Dislike berhasil diupdate",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "properties": {
-                                        "id_tidaksuka": {
-                                            "type": "integer",
-                                            "example": 1
-                                        },
-                                        "id_user": {
-                                            "type": "integer",
-                                            "example": 1
-                                        },
-                                        "id_berita": {
-                                            "type": "integer",
-                                            "example": 1
-                                        },
-                                        "tidak_suka": {
-                                            "type": "boolean",
-                                            "example": false
-                                        }
-                                    },
-                                    "type": "object"
-                                }
-                            }
-                        }
-                    },
-                    "404": {
-                        "description": "Dislike tidak ditemukan"
+                        "description": "Status laporan berhasil diupdate"
                     }
-                }
-            },
-            "delete": {
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/search": {
+            "get": {
                 "tags": [
-                    "TidakDisukai"
+                    "Search"
                 ],
-                "summary": "Delete dislike",
-                "description": "Menghapus data tidak disukai",
-                "operationId": "c97279a62ddbbbada6f80f5f05a6732f",
+                "summary": "Search berita berdasarkan query",
+                "description": "Pencarian berita berdasarkan judul, isi, atau penulis",
+                "operationId": "267256bf9c306b2e709354696ddb8941",
                 "parameters": [
                     {
-                        "name": "id_tidaksuka",
-                        "in": "path",
+                        "name": "q",
+                        "in": "query",
+                        "description": "Query pencarian",
                         "required": true,
                         "schema": {
+                            "type": "string",
+                            "example": "politik"
+                        }
+                    },
+                    {
+                        "name": "limit",
+                        "in": "query",
+                        "description": "Jumlah hasil per halaman",
+                        "schema": {
                             "type": "integer",
-                            "example": 1
+                            "default": 10,
+                            "example": 10
                         }
                     }
                 ],
                 "responses": {
                     "200": {
-                        "description": "Dislike berhasil dihapus",
+                        "description": "Hasil pencarian",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "properties": {
+                                            "id_berita": {
+                                                "type": "integer",
+                                                "example": 1
+                                            },
+                                            "judul": {
+                                                "type": "string",
+                                                "example": "Berita Politik Terbaru"
+                                            },
+                                            "isi": {
+                                                "type": "string",
+                                                "example": "Isi berita..."
+                                            },
+                                            "penulis": {
+                                                "type": "object"
+                                            }
+                                        },
+                                        "type": "object"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/search/advanced": {
+            "get": {
+                "tags": [
+                    "Search"
+                ],
+                "summary": "Pencarian advanced berita",
+                "description": "Pencarian berita dengan filter kategori, penulis, tanggal",
+                "operationId": "5d4f10f697f8f31f8ab1622b6f9f00c0",
+                "parameters": [
+                    {
+                        "name": "judul",
+                        "in": "query",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "kategori",
+                        "in": "query",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "penulis",
+                        "in": "query",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "tanggal_dari",
+                        "in": "query",
+                        "schema": {
+                            "type": "string",
+                            "format": "date"
+                        }
+                    },
+                    {
+                        "name": "tanggal_sampai",
+                        "in": "query",
+                        "schema": {
+                            "type": "string",
+                            "format": "date"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Hasil pencarian advanced"
+                    }
+                }
+            }
+        },
+        "/transaction": {
+            "post": {
+                "tags": [
+                    "Transaction"
+                ],
+                "summary": "Simulasi transaksi pembayaran untuk upgrade premium",
+                "description": "Simulasi pembayaran untuk mendapatkan token upgrade premium. Dalam real app, ini terintegrasi dengan payment gateway.",
+                "operationId": "12f5d3bbcf204559a6ed83734df55863",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "amount"
+                                ],
+                                "properties": {
+                                    "amount": {
+                                        "description": "Jumlah pembayaran dalam Rupiah",
+                                        "type": "number",
+                                        "format": "float",
+                                        "example": 50000
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Transaksi berhasil",
                         "content": {
                             "application/json": {
                                 "schema": {
                                     "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
                                         "message": {
                                             "type": "string",
-                                            "example": "Dislike berhasil dihapus"
+                                            "example": "Transaksi berhasil. Gunakan token ini untuk upgrade."
+                                        },
+                                        "data": {
+                                            "properties": {
+                                                "token": {
+                                                    "description": "Token upgrade yang bisa digunakan di endpoint /upgrade",
+                                                    "type": "string",
+                                                    "example": "UPGRADE_TOKEN_001"
+                                                }
+                                            },
+                                            "type": "object"
                                         }
                                     },
                                     "type": "object"
@@ -1672,10 +2618,162 @@
                             }
                         }
                     },
-                    "404": {
-                        "description": "Dislike tidak ditemukan"
+                    "400": {
+                        "description": "Jumlah pembayaran tidak valid",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": false
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Jumlah pembayaran minimal 50000"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": false
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Unauthorized"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
                     }
-                }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/upgrade": {
+            "post": {
+                "tags": [
+                    "Upgrade"
+                ],
+                "summary": "Upgrade user membership to premium",
+                "description": "Upgrade membership user menjadi premium dengan token. Token premium dapat diperoleh dari admin atau melalui pembelian.",
+                "operationId": "024772878fb55478e40ede44884094d5",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "token"
+                                ],
+                                "properties": {
+                                    "token": {
+                                        "description": "Token premium yang valid (dapatkan dari admin atau pembelian)",
+                                        "type": "string",
+                                        "example": "PREMIUM_TOKEN_12345"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Upgrade berhasil",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Membership berhasil diupgrade ke premium"
+                                        },
+                                        "data": {
+                                            "properties": {
+                                                "id_user": {
+                                                    "type": "integer",
+                                                    "example": 1
+                                                },
+                                                "membership": {
+                                                    "type": "string",
+                                                    "example": "premium"
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Token tidak valid atau user sudah premium",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": false
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Token tidak valid"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": false
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Unauthorized"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
             }
         },
         "/users": {
@@ -1714,6 +2812,14 @@
                                             "role": {
                                                 "type": "string",
                                                 "example": "pembaca"
+                                            },
+                                            "membership": {
+                                                "type": "string",
+                                                "example": "free"
+                                            },
+                                            "foto_profil": {
+                                                "type": "string",
+                                                "example": "profile.jpg"
                                             }
                                         },
                                         "type": "object"
@@ -1771,6 +2877,14 @@
                                         "role": {
                                             "type": "string",
                                             "example": "pembaca"
+                                        },
+                                        "membership": {
+                                            "type": "string",
+                                            "example": "free"
+                                        },
+                                        "foto_profil": {
+                                            "type": "string",
+                                            "example": "profile.jpg"
                                         }
                                     },
                                     "type": "object"
@@ -1787,8 +2901,8 @@
                 "tags": [
                     "Users"
                 ],
-                "summary": "Update user",
-                "description": "Mengupdate username, name, email, dan password",
+                "summary": "Update user profile",
+                "description": "Mengupdate username, name, email, password, dan foto profil",
                 "operationId": "d74471d6414b21c44f6aa5e5497cfbbc",
                 "parameters": [
                     {
@@ -1805,7 +2919,7 @@
                 "requestBody": {
                     "required": true,
                     "content": {
-                        "application/json": {
+                        "multipart/form-data": {
                             "schema": {
                                 "properties": {
                                     "username": {
@@ -1829,6 +2943,10 @@
                                         "type": "string",
                                         "format": "password",
                                         "example": "newP@ssW0rd3"
+                                    },
+                                    "foto_profil": {
+                                        "type": "string",
+                                        "format": "binary"
                                     }
                                 },
                                 "type": "object"
@@ -1858,6 +2976,18 @@
                                         "email": {
                                             "type": "string",
                                             "example": "john@example.com"
+                                        },
+                                        "role": {
+                                            "type": "string",
+                                            "example": "pembaca"
+                                        },
+                                        "membership": {
+                                            "type": "string",
+                                            "example": "free"
+                                        },
+                                        "foto_profil": {
+                                            "type": "string",
+                                            "example": "profile.jpg"
                                         }
                                     },
                                     "type": "object"
@@ -1909,10 +3039,20 @@
                 "type": "http",
                 "bearerFormat": "JWT",
                 "scheme": "bearer"
+            },
+            "sanctum": {
+                "type": "http",
+                "scheme": "bearer",
+                "description": "Enter your Bearer token",
+                "bearerFormat": "JWT"
             }
         }
     },
     "tags": [
+        {
+            "name": "Analytics",
+            "description": "API Endpoints untuk statistik admin"
+        },
         {
             "name": "Authentication",
             "description": "API Endpoints untuk autentikasi"
@@ -1920,6 +3060,10 @@
         {
             "name": "Berita",
             "description": "API Endpoints untuk manajemen berita"
+        },
+        {
+            "name": "Bookmark",
+            "description": "API Endpoints untuk bookmark berita favorit"
         },
         {
             "name": "Disukai",
@@ -1934,8 +3078,24 @@
             "description": "API Endpoints untuk manajemen kategori"
         },
         {
-            "name": "TidakDisukai",
-            "description": "API Endpoints untuk manajemen dislike/tidak disukai"
+            "name": "Notification",
+            "description": "API Endpoints untuk notifikasi"
+        },
+        {
+            "name": "Report",
+            "description": "API Endpoints untuk melaporkan konten"
+        },
+        {
+            "name": "Search",
+            "description": "API Endpoints untuk pencarian berita"
+        },
+        {
+            "name": "Transaction",
+            "description": "API Endpoints untuk transaksi pembayaran"
+        },
+        {
+            "name": "Upgrade",
+            "description": "API Endpoints untuk upgrade membership user"
         },
         {
             "name": "Users",

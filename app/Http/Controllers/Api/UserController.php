@@ -32,7 +32,9 @@ class UserController extends Controller
      *                 @OA\Property(property="username", type="string", example="johndoe"),
      *                 @OA\Property(property="name", type="string", example="John Doe"),
      *                 @OA\Property(property="email", type="string", example="john@example.com"),
-     *                 @OA\Property(property="role", type="string", example="pembaca")
+     *                 @OA\Property(property="role", type="string", example="pembaca"),
+     *                 @OA\Property(property="membership", type="string", example="free"),
+     *                 @OA\Property(property="foto_profil", type="string", example="profile.jpg")
      *             )
      *         )
      *     )
@@ -45,7 +47,9 @@ class UserController extends Controller
             'username' => $user->username,
             'name' => $user->name,
             'email' => $user->email,
-            'role' => $user->role
+            'role' => $user->role,
+            'membership' => $user->membership,
+            'foto_profil' => $user->foto_profil
         ]);
 
         return response()->json($users);
@@ -72,7 +76,9 @@ class UserController extends Controller
      *             @OA\Property(property="username", type="string", example="johndoe"),
      *             @OA\Property(property="name", type="string", example="John Doe"),
      *             @OA\Property(property="email", type="string", example="john@example.com"),
-     *             @OA\Property(property="role", type="string", example="pembaca")
+     *             @OA\Property(property="role", type="string", example="pembaca"),
+     *             @OA\Property(property="membership", type="string", example="free"),
+     *             @OA\Property(property="foto_profil", type="string", example="profile.jpg")
      *         )
      *     ),
      *     @OA\Response(
@@ -93,7 +99,9 @@ class UserController extends Controller
             'username' => $user->username,
             'name' => $user->name,
             'email' => $user->email,
-            'role' => $user->role
+            'role' => $user->role,
+            'membership' => $user->membership,
+            'foto_profil' => $user->foto_profil
         ]);
     }
 
@@ -101,8 +109,8 @@ class UserController extends Controller
      * @OA\Put(
      *     path="/users/{id_user}",
      *     tags={"Users"},
-     *     summary="Update user",
-     *     description="Mengupdate username, name, email, dan password",
+     *     summary="Update user profile",
+     *     description="Mengupdate username, name, email, password, dan foto profil",
      *     @OA\Parameter(
      *         name="id_user",
      *         in="path",
@@ -112,12 +120,16 @@ class UserController extends Controller
      *     ),
      *     @OA\RequestBody(
      *         required=true,
-     *         @OA\JsonContent(
-     *             @OA\Property(property="username", type="string", example="johndoe"),
-     *             @OA\Property(property="name", type="string", example="John Doe"),
-     *             @OA\Property(property="email", type="string", example="john@example.com"),
-     *             @OA\Property(property="old_password", type="string", format="password", example="P@ssW0rd3"),
-     *             @OA\Property(property="new_password", type="string", format="password", example="newP@ssW0rd3")
+     *         @OA\MediaType(
+     *             mediaType="multipart/form-data",
+     *             @OA\Schema(
+     *                 @OA\Property(property="username", type="string", example="johndoe"),
+     *                 @OA\Property(property="name", type="string", example="John Doe"),
+     *                 @OA\Property(property="email", type="string", example="john@example.com"),
+     *                 @OA\Property(property="old_password", type="string", format="password", example="P@ssW0rd3"),
+     *                 @OA\Property(property="new_password", type="string", format="password", example="newP@ssW0rd3"),
+     *                 @OA\Property(property="foto_profil", type="string", format="binary")
+     *             )
      *         )
      *     ),
      *     @OA\Response(
@@ -127,7 +139,10 @@ class UserController extends Controller
      *             @OA\Property(property="id_user", type="integer", example=1),
      *             @OA\Property(property="username", type="string", example="johndoe"),
      *             @OA\Property(property="name", type="string", example="John Doe"),
-     *             @OA\Property(property="email", type="string", example="john@example.com")
+     *             @OA\Property(property="email", type="string", example="john@example.com"),
+     *             @OA\Property(property="role", type="string", example="pembaca"),
+     *             @OA\Property(property="membership", type="string", example="free"),
+     *             @OA\Property(property="foto_profil", type="string", example="profile.jpg")
      *         )
      *     ),
      *     @OA\Response(
@@ -158,6 +173,7 @@ class UserController extends Controller
                 'min:8',
                 'regex:/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&.,#^()_\-+=])[A-Za-z\d@$!%*?&.,#^()_\-+=]{8,}$/'
             ],
+            'foto_profil' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048'
         ]);
 
         if ($request->filled('new_password')) {
@@ -170,13 +186,29 @@ class UserController extends Controller
         if ($request->filled('username')) $user->username = $request->username;
         if ($request->filled('name')) $user->name = $request->name;
         if ($request->filled('email')) $user->email = $request->email;
+
+        // Handle foto_profil upload
+        if ($request->hasFile('foto_profil')) {
+            // Delete old foto_profil if exists
+            if ($user->foto_profil && \Storage::disk('public')->exists($user->foto_profil)) {
+                \Storage::disk('public')->delete($user->foto_profil);
+            }
+            $file = $request->file('foto_profil');
+            $filename = time() . '_' . $file->getClientOriginalName();
+            $path = $file->storeAs('profil', $filename, 'public');
+            $user->foto_profil = $path;
+        }
+
         $user->save();
 
         return response()->json([
             'id_user' => $user->id_user,
             'username' => $user->username,
             'name' => $user->name,
-            'email' => $user->email
+            'email' => $user->email,
+            'role' => $user->role,
+            'membership' => $user->membership,
+            'foto_profil' => $user->foto_profil
         ]);
     }
 

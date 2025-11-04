@@ -51,7 +51,8 @@ class AuthController extends Controller
      *                 @OA\Property(property="name", type="string", example="John Doe"),
      *                 @OA\Property(property="email", type="string", example="john@example.com"),
      *                 @OA\Property(property="role", type="string", example="pembaca"),
-     *                 @OA\Property(property="membership", type="string", example="free")
+     *                 @OA\Property(property="membership", type="string", example="free"),
+     *                 @OA\Property(property="foto_profil", type="string", example="profile.jpg")
      *             )
      *         )
      *     ),
@@ -107,7 +108,7 @@ class AuthController extends Controller
 
             DB::commit();
 
-            // Response (✅ tampilkan membership)
+            // Response (✅ tampilkan membership dan foto_profil)
             return response()->json([
                 'success' => true,
                 'message' => 'User berhasil didaftarkan',
@@ -117,7 +118,8 @@ class AuthController extends Controller
                     'name'       => $user->name,
                     'email'      => $user->email,
                     'role'       => $user->role,
-                    'membership' => $user->membership
+                    'membership' => $user->membership,
+                    'foto_profil' => $user->foto_profil
                 ]
             ], 201);
         } catch (ValidationException $e) {
@@ -163,9 +165,42 @@ class AuthController extends Controller
         ], 201);
     }
 
-    // ============================================================
-    // Login
-    // ============================================================
+    /**
+     * @OA\Post(
+     *     path="/login",
+     *     tags={"Authentication"},
+     *     summary="Login user",
+     *     description="Login user dengan email, password, dan role. Mengembalikan access token untuk autentikasi selanjutnya.",
+     *     @OA\RequestBody(
+     *         required=true,
+     *         @OA\JsonContent(
+     *             required={"email","password","role"},
+     *             @OA\Property(property="email", type="string", format="email", example="john@example.com"),
+     *             @OA\Property(property="password", type="string", format="password", example="P@ssW0rd3"),
+     *             @OA\Property(property="role", type="string", enum={"admin", "penulis", "pembaca"}, example="pembaca")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Login berhasil",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="message", type="string", example="Login berhasil"),
+     *             @OA\Property(property="access_token", type="string", example="1|abc123..."),
+     *             @OA\Property(property="token_type", type="string", example="Bearer"),
+     *             @OA\Property(property="role", type="string", example="pembaca"),
+     *             @OA\Property(property="membership", type="string", example="free"),
+     *             @OA\Property(property="foto_profil", type="string", nullable=true, example="profil/1234567890_image.jpg")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=401,
+     *         description="Email, password, atau role salah",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="message", type="string", example="Email, password, atau role salah")
+     *         )
+     *     )
+     * )
+     */
     public function login(Request $request)
     {
         $request->validate([
@@ -189,7 +224,8 @@ class AuthController extends Controller
             'access_token' => $token,
             'token_type'   => 'Bearer',
             'role'         => $user->role,
-            'membership'   => $user->membership // ✅ tampilkan membership saat login
+            'membership'   => $user->membership, // ✅ tampilkan membership saat login
+            'foto_profil'  => $user->foto_profil // ✅ tampilkan foto_profil saat login
         ]);
     }
 }
