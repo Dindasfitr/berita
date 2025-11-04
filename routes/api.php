@@ -47,7 +47,7 @@ Route::get('/berita/search', [BeritaController::class, 'search']);
 // Penulis & Admin bisa tambah atau edit berita
 Route::middleware('auth:sanctum')->group(function () {
     Route::post('/berita', [BeritaController::class, 'store']);
-    Route::put('/berita/{id_berita}', [BeritaController::class, 'update']); // edit menggunakan put
+    Route::post('/berita/{id_berita}', [BeritaController::class, 'update']); // edit menggunakan put
     Route::patch('/berita/{id_berita}', [BeritaController::class, 'update']); // alternatif patch
 });
 

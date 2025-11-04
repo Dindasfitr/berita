@@ -690,18 +690,18 @@
                     }
                 }
             },
-            "put": {
+            "post": {
                 "tags": [
                     "Berita"
                 ],
-                "summary": "Update news",
-                "description": "Mengubah data berita. Hanya penulis pemilik berita atau admin yang bisa mengedit.",
-                "operationId": "1cc54840f9f78b40cec984b41ad56b99",
+                "summary": "Update berita (POST, mendukung upload gambar)",
+                "description": "Mengubah data berita. Hanya penulis pemilik berita atau admin yang bisa mengedit. Backend otomatis mengenali ini sebagai update.",
+                "operationId": "db2e10d4931786042a13b15b1aa26ec1",
                 "parameters": [
                     {
                         "name": "id_berita",
                         "in": "path",
-                        "description": "ID berita",
+                        "description": "ID berita yang akan diperbarui",
                         "required": true,
                         "schema": {
                             "type": "integer",
@@ -714,12 +714,6 @@
                     "content": {
                         "multipart/form-data": {
                             "schema": {
-                                "required": [
-                                    "id_kategori",
-                                    "judul",
-                                    "isi",
-                                    "tgl_terbit"
-                                ],
                                 "properties": {
                                     "id_kategori": {
                                         "description": "ID kategori berita",
@@ -729,12 +723,12 @@
                                     "judul": {
                                         "description": "Judul berita",
                                         "type": "string",
-                                        "example": "Berita Terkini"
+                                        "example": "Berita Terkini Updated"
                                     },
                                     "isi": {
                                         "description": "Konten berita",
                                         "type": "string",
-                                        "example": "Isi berita..."
+                                        "example": "Isi berita yang sudah diupdate..."
                                     },
                                     "gambar": {
                                         "description": "File gambar berita (opsional)",
@@ -745,10 +739,10 @@
                                         "description": "Tanggal terbit berita",
                                         "type": "string",
                                         "format": "date",
-                                        "example": "2025-01-01"
+                                        "example": "2025-01-15"
                                     },
                                     "is_premium": {
-                                        "description": "Apakah berita premium (default: false)",
+                                        "description": "Apakah berita premium",
                                         "type": "boolean",
                                         "example": false
                                     }
@@ -779,24 +773,52 @@
                                         },
                                         "judul": {
                                             "type": "string",
-                                            "example": "Berita Terkini"
+                                            "example": "Berita Terkini Updated"
                                         },
                                         "isi": {
                                             "type": "string",
-                                            "example": "Isi berita..."
+                                            "example": "Isi berita yang sudah diupdate..."
                                         },
                                         "gambar": {
                                             "type": "string",
-                                            "example": "image.jpg"
+                                            "example": "berita/1736345678_image.jpg"
                                         },
                                         "tgl_terbit": {
                                             "type": "string",
                                             "format": "date",
-                                            "example": "2025-01-01"
+                                            "example": "2025-01-15"
                                         },
                                         "is_premium": {
                                             "type": "boolean",
                                             "example": false
+                                        },
+                                        "penulis": {
+                                            "properties": {
+                                                "id_user": {
+                                                    "type": "integer",
+                                                    "example": 1
+                                                },
+                                                "username": {
+                                                    "type": "string",
+                                                    "example": "johndoe"
+                                                },
+                                                "name": {
+                                                    "type": "string",
+                                                    "example": "John Doe"
+                                                },
+                                                "email": {
+                                                    "type": "string",
+                                                    "example": "john@example.com"
+                                                },
+                                                "role": {
+                                                    "type": "string",
+                                                    "example": "penulis"
+                                                }
+                                            },
+                                            "type": "object"
+                                        },
+                                        "kategori": {
+                                            "type": "object"
                                         }
                                     },
                                     "type": "object"

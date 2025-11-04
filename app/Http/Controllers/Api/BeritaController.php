@@ -318,144 +318,145 @@ class BeritaController extends Controller
     }
 
 
+
     /**
-     * @OA\Put(
-     *     path="/berita/{id_berita}",
-     *     tags={"Berita"},
-     *     summary="Update news",
-     *     description="Mengubah data berita. Hanya penulis pemilik berita atau admin yang bisa mengedit.",
-     *     security={{"sanctum":{}}},
-     *     @OA\Parameter(
-     *         name="id_berita",
-     *         in="path",
-     *         description="ID berita",
-     *         required=true,
-     *         @OA\Schema(type="integer", example=1)
-     *     ),
-     *     @OA\RequestBody(
-     *         required=true,
-     *         @OA\MediaType(
-     *             mediaType="multipart/form-data",
-     *             @OA\Schema(
-     *                 required={"id_kategori", "judul", "isi", "tgl_terbit"},
-     *                 @OA\Property(property="id_kategori", type="integer", example=1, description="ID kategori berita"),
-     *                 @OA\Property(property="judul", type="string", example="Berita Terkini", description="Judul berita"),
-     *                 @OA\Property(property="isi", type="string", example="Isi berita...", description="Konten berita"),
-     *                 @OA\Property(property="gambar", type="string", format="binary", description="File gambar berita (opsional)"),
-     *                 @OA\Property(property="tgl_terbit", type="string", format="date", example="2025-01-01", description="Tanggal terbit berita"),
-     *                 @OA\Property(property="is_premium", type="boolean", example=false, description="Apakah berita premium (default: false)")
-     *             )
-     *         )
-     *     ),
-     *     @OA\Response(
-     *         response=200,
-     *         description="Berita berhasil diupdate",
-     *         @OA\JsonContent(
-     *             @OA\Property(property="id_berita", type="integer", example=1),
-     *             @OA\Property(property="id_user", type="integer", example=1),
-     *             @OA\Property(property="id_kategori", type="integer", example=1),
-     *             @OA\Property(property="judul", type="string", example="Berita Terkini"),
-     *             @OA\Property(property="isi", type="string", example="Isi berita..."),
-     *             @OA\Property(property="gambar", type="string", example="image.jpg"),
-     *             @OA\Property(property="tgl_terbit", type="string", format="date", example="2025-01-01"),
-     *             @OA\Property(property="is_premium", type="boolean", example=false)
-     *         )
-     *     ),
-     *     @OA\Response(
-     *         response=403,
-     *         description="Akses ditolak: Hanya penulis berita atau admin yang bisa mengedit",
-     *         @OA\JsonContent(
-     *             @OA\Property(property="error", type="string", example="Akses ditolak: Hanya penulis berita atau admin yang bisa mengedit")
-     *         )
-     *     ),
-     *     @OA\Response(
-     *         response=404,
-     *         description="Berita tidak ditemukan",
-     *         @OA\JsonContent(
-     *             @OA\Property(property="error", type="string", example="Berita tidak ditemukan")
-     *         )
-     *     ),
-     *     @OA\Response(
-     *         response=401,
-     *         description="Unauthorized",
-     *         @OA\JsonContent(
-     *             @OA\Property(property="message", type="string", example="Unauthenticated.")
-     *         )
-     *     )
-     * )
-     */
-    public function update(Request $request, $id_berita): JsonResponse
-    {
-        $berita = Berita::find($id_berita);
-        if (!$berita) {
-            return response()->json(['error' => 'Berita tidak ditemukan'], 404);
-        }
-
-        $user = $request->user();
-
-        // Cek role: hanya penulis yang punya berita ini atau admin yang bisa edit
-        if (!$user || ($user->role !== 'admin' && $berita->id_user !== $user->id_user)) {
-            return response()->json(['error' => 'Akses ditolak: Hanya penulis berita atau admin yang bisa mengedit'], 403);
-        }
-
-        $request->validate([
-            'id_kategori' => 'sometimes|integer|exists:kategori,id_kategori',
-            'judul' => 'sometimes|string|max:255',
-            'isi' => 'sometimes|string',
-            'gambar' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
-            'tgl_terbit' => 'sometimes|date',
-            'is_premium' => 'sometimes|in:0,1,true,false'
-        ]);
-
-        // Update fields only if provided
-        if ($request->has('id_kategori') && $request->filled('id_kategori')) {
-            $berita->id_kategori = $request->input('id_kategori');
-        }
-        if ($request->has('judul') && $request->filled('judul')) {
-            $berita->judul = $request->input('judul');
-        }
-        if ($request->has('isi') && $request->filled('isi')) {
-            $berita->isi = $request->input('isi');
-        }
-        if ($request->has('tgl_terbit') && $request->filled('tgl_terbit')) {
-            $berita->tgl_terbit = $request->input('tgl_terbit');
-        }
-        if ($request->has('is_premium')) {
-            $berita->is_premium = $request->boolean('is_premium');
-        }
-
-        // Handle image upload
-        if ($request->hasFile('gambar')) {
-            if ($berita->gambar && Storage::disk('public')->exists($berita->gambar)) {
-                Storage::disk('public')->delete($berita->gambar);
-            }
-            $file = $request->file('gambar');
-            $filename = time() . '_' . $file->getClientOriginalName();
-            $path = $file->storeAs('berita', $filename, 'public');
-            $berita->gambar = $path;
-        }
-
-        $berita->save();
-
-        return response()->json([
-            'id_berita' => $berita->id_berita,
-            'id_user' => $berita->id_user,
-            'id_kategori' => $berita->id_kategori,
-            'judul' => $berita->judul,
-            'isi' => $berita->isi,
-            'gambar' => $berita->gambar,
-            'tgl_terbit' => $berita->tgl_terbit,
-            'is_premium' => $berita->is_premium,
-            'penulis' => User::find($berita->id_user) ? [
-                'id_user' => User::find($berita->id_user)->id_user,
-                'username' => User::find($berita->id_user)->username,
-                'name' => User::find($berita->id_user)->name,
-                'email' => User::find($berita->id_user)->email,
-                'role' => User::find($berita->id_user)->role
-            ] : null,
-            'kategori' => $berita->kategori
-        ]);
+ * @OA\Post(
+ *     path="/berita/{id_berita}",
+ *     tags={"Berita"},
+ *     summary="Update berita (POST, mendukung upload gambar)",
+ *     description="Mengubah data berita. Hanya penulis pemilik berita atau admin yang bisa mengedit. Backend otomatis mengenali ini sebagai update.",
+ *     security={{"sanctum":{}}},
+ *     @OA\Parameter(
+ *         name="id_berita",
+ *         in="path",
+ *         description="ID berita yang akan diperbarui",
+ *         required=true,
+ *         @OA\Schema(type="integer", example=1)
+ *     ),
+ *     @OA\RequestBody(
+ *         required=true,
+ *         @OA\MediaType(
+ *             mediaType="multipart/form-data",
+ *             @OA\Schema(
+ *                 @OA\Property(property="id_kategori", type="integer", example=1, description="ID kategori berita"),
+ *                 @OA\Property(property="judul", type="string", example="Berita Terkini Updated", description="Judul berita"),
+ *                 @OA\Property(property="isi", type="string", example="Isi berita yang sudah diupdate...", description="Konten berita"),
+ *                 @OA\Property(property="gambar", type="string", format="binary", description="File gambar berita (opsional)"),
+ *                 @OA\Property(property="tgl_terbit", type="string", format="date", example="2025-01-15", description="Tanggal terbit berita"),
+ *                 @OA\Property(property="is_premium", type="boolean", example=false, description="Apakah berita premium")
+ *             )
+ *         )
+ *     ),
+ *     @OA\Response(
+ *         response=200,
+ *         description="Berita berhasil diupdate",
+ *         @OA\JsonContent(
+ *             @OA\Property(property="id_berita", type="integer", example=1),
+ *             @OA\Property(property="id_user", type="integer", example=1),
+ *             @OA\Property(property="id_kategori", type="integer", example=1),
+ *             @OA\Property(property="judul", type="string", example="Berita Terkini Updated"),
+ *             @OA\Property(property="isi", type="string", example="Isi berita yang sudah diupdate..."),
+ *             @OA\Property(property="gambar", type="string", example="berita/1736345678_image.jpg"),
+ *             @OA\Property(property="tgl_terbit", type="string", format="date", example="2025-01-15"),
+ *             @OA\Property(property="is_premium", type="boolean", example=false),
+ *             @OA\Property(
+ *                 property="penulis",
+ *                 type="object",
+ *                 @OA\Property(property="id_user", type="integer", example=1),
+ *                 @OA\Property(property="username", type="string", example="johndoe"),
+ *                 @OA\Property(property="name", type="string", example="John Doe"),
+ *                 @OA\Property(property="email", type="string", example="john@example.com"),
+ *                 @OA\Property(property="role", type="string", example="penulis")
+ *             ),
+ *             @OA\Property(property="kategori", type="object")
+ *         )
+ *     ),
+ *     @OA\Response(
+ *         response=403,
+ *         description="Akses ditolak: Hanya penulis berita atau admin yang bisa mengedit",
+ *         @OA\JsonContent(
+ *             @OA\Property(property="error", type="string", example="Akses ditolak: Hanya penulis berita atau admin yang bisa mengedit")
+ *         )
+ *     ),
+ *     @OA\Response(
+ *         response=404,
+ *         description="Berita tidak ditemukan",
+ *         @OA\JsonContent(
+ *             @OA\Property(property="error", type="string", example="Berita tidak ditemukan")
+ *         )
+ *     ),
+ *     @OA\Response(
+ *         response=401,
+ *         description="Unauthorized",
+ *         @OA\JsonContent(
+ *             @OA\Property(property="message", type="string", example="Unauthenticated.")
+ *         )
+ *     )
+ * )
+ */
+public function update(Request $request, $id_berita): JsonResponse
+{
+    $berita = Berita::find($id_berita);
+    if (!$berita) {
+        return response()->json(['error' => 'Berita tidak ditemukan'], 404);
     }
+
+    $user = $request->user();
+    if (!$user || ($user->role !== 'admin' && $berita->id_user !== $user->id_user)) {
+        return response()->json(['error' => 'Akses ditolak: Hanya penulis berita atau admin yang bisa mengedit'], 403);
+    }
+
+    $request->validate([
+        'id_kategori' => 'sometimes|integer|exists:kategori,id_kategori',
+        'judul' => 'sometimes|string|max:255',
+        'isi' => 'sometimes|string',
+        'gambar' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+        'tgl_terbit' => 'sometimes|date',
+        'is_premium' => 'sometimes|in:0,1,true,false'
+    ]);
+
+    $dataToUpdate = $request->only([
+        'id_kategori', 'judul', 'isi', 'tgl_terbit'
+    ]);
+
+    if ($request->has('is_premium')) {
+        $dataToUpdate['is_premium'] = $request->boolean('is_premium');
+    }
+
+    if ($request->hasFile('gambar')) {
+        if ($berita->gambar && Storage::disk('public')->exists($berita->gambar)) {
+            Storage::disk('public')->delete($berita->gambar);
+        }
+
+        $file = $request->file('gambar');
+        $filename = time() . '_' . $file->getClientOriginalName();
+        $path = $file->storeAs('berita', $filename, 'public');
+        $dataToUpdate['gambar'] = $path;
+    }
+
+    $berita->fill($dataToUpdate)->save();
+    $berita->refresh()->load('kategori');
+    $penulis = User::find($berita->id_user);
+
+    return response()->json([
+        'id_berita' => $berita->id_berita,
+        'id_user' => $berita->id_user,
+        'id_kategori' => $berita->id_kategori,
+        'judul' => $berita->judul,
+        'isi' => $berita->isi,
+        'gambar' => $berita->gambar,
+        'tgl_terbit' => $berita->tgl_terbit,
+        'is_premium' => $berita->is_premium,
+        'penulis' => $penulis ? [
+            'id_user' => $penulis->id_user,
+            'username' => $penulis->username,
+            'name' => $penulis->name,
+            'email' => $penulis->email,
+            'role' => $penulis->role
+        ] : null,
+        'kategori' => $berita->kategori
+    ]);
+}
 
 
 
