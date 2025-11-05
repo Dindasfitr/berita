@@ -25,7 +25,7 @@ Route::post('/login', [AuthController::class, 'login']); // ditambahkan login
 Route::get('/users', [UserController::class, 'index']);
 Route::get('/users/{id_user}', [UserController::class, 'show']);
 Route::middleware(['auth:sanctum'])->group(function () {
-    Route::put('/users/{id_user}', [UserController::class, 'update']);
+    Route::post('/users/{id_user}', [UserController::class, 'update'])->middleware('auth:sanctum');
 });
 Route::delete('/users/{id_user}', [UserController::class, 'destroy']);
 
@@ -37,11 +37,11 @@ Route::put('/kategori/{id_kategori}', [KategoriController::class, 'update']);
 Route::delete('/kategori/{id_kategori}', [KategoriController::class, 'destroy']);
 
 // Berita
+Route::get('/berita/search', [BeritaController::class, 'search']);
 Route::get('/berita', [BeritaController::class, 'index']);
 Route::get('/berita/{id_berita}', [BeritaController::class, 'show']);
 Route::get('/berita/user/{id_user}', [BeritaController::class, 'getByUser']);
 Route::get('/berita/category/{id_kategori}', [BeritaController::class, 'getByCategory']);
-Route::get('/berita/search', [BeritaController::class, 'search']);
 
 // Protected routes (butuh login + role)
 // Penulis & Admin bisa tambah atau edit berita

@@ -156,4 +156,8 @@ class SearchController extends Controller
             'total' => $results->count()
         ]);
     }
+
+
+
+    
 }

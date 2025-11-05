@@ -16,6 +16,7 @@ use Illuminate\Support\Facades\Hash;
  */
 class UserController extends Controller
 {
+
     /**
      * @OA\Get(
      *     path="/users",
@@ -105,12 +106,14 @@ class UserController extends Controller
         ]);
     }
 
+
     /**
-     * @OA\Put(
+     * @OA\Post(
      *     path="/users/{id_user}",
      *     tags={"Users"},
      *     summary="Update user profile",
-     *     description="Mengupdate username, name, email, password, dan foto profil",
+     *     description="Mengupdate username, name, email, password, dan foto profil. Tidak perlu field _method, cukup kirim multipart/form-data biasa.",
+     *     security={{"sanctum":{}}},
      *     @OA\Parameter(
      *         name="id_user",
      *         in="path",
@@ -142,17 +145,12 @@ class UserController extends Controller
      *             @OA\Property(property="email", type="string", example="john@example.com"),
      *             @OA\Property(property="role", type="string", example="pembaca"),
      *             @OA\Property(property="membership", type="string", example="free"),
-     *             @OA\Property(property="foto_profil", type="string", example="profile.jpg")
+     *             @OA\Property(property="foto_profil", type="string", example="profil/profile.jpg")
      *         )
      *     ),
-     *     @OA\Response(
-     *         response=400,
-     *         description="Password lama salah"
-     *     ),
-     *     @OA\Response(
-     *         response=404,
-     *         description="User tidak ditemukan"
-     *     )
+     *     @OA\Response(response=400, description="Password lama salah"),
+     *     @OA\Response(response=404, description="User tidak ditemukan"),
+     *     @OA\Response(response=401, description="Unauthenticated")
      * )
      */
     public function update(Request $request, $id_user): JsonResponse
@@ -162,7 +160,8 @@ class UserController extends Controller
             return response()->json(['error' => 'User tidak ditemukan'], 404);
         }
 
-        $request->validate([
+        // ✅ Validasi input
+        $validated = $request->validate([
             'username' => 'sometimes|string|max:255|unique:user,username,' . $id_user . ',id_user',
             'name' => 'sometimes|string|max:255',
             'email' => 'sometimes|string|email|max:255',
@@ -176,6 +175,7 @@ class UserController extends Controller
             'foto_profil' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048'
         ]);
 
+        // 🔐 Ubah password jika diminta
         if ($request->filled('new_password')) {
             if (!Hash::check($request->old_password, $user->password)) {
                 return response()->json(['error' => 'Password lama salah'], 400);
@@ -183,16 +183,16 @@ class UserController extends Controller
             $user->password = Hash::make($request->new_password);
         }
 
-        if ($request->filled('username')) $user->username = $request->username;
-        if ($request->filled('name')) $user->name = $request->name;
-        if ($request->filled('email')) $user->email = $request->email;
+        // 🧩 Update field text biasa
+        $user->fill($request->only(['username', 'name', 'email']));
 
-        // Handle foto_profil upload
+        // 🖼️ Upload foto profil baru jika dikirim
         if ($request->hasFile('foto_profil')) {
-            // Delete old foto_profil if exists
-            if ($user->foto_profil && \Storage::disk('public')->exists($user->foto_profil)) {
-                \Storage::disk('public')->delete($user->foto_profil);
+            // Hapus foto lama kalau ada
+            if ($user->foto_profil && Storage::disk('public')->exists($user->foto_profil)) {
+                Storage::disk('public')->delete($user->foto_profil);
             }
+
             $file = $request->file('foto_profil');
             $filename = time() . '_' . $file->getClientOriginalName();
             $path = $file->storeAs('profil', $filename, 'public');
@@ -208,9 +208,10 @@ class UserController extends Controller
             'email' => $user->email,
             'role' => $user->role,
             'membership' => $user->membership,
-            'foto_profil' => $user->foto_profil
+            'foto_profil' => $user->foto_profil ? asset('storage/' . $user->foto_profil) : null
         ]);
     }
+
 
     /**
      * @OA\Delete(

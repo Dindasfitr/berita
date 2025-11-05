@@ -50,6 +50,8 @@ class BeritaController extends Controller
      *     )
      * )
      */
+
+    
     public function index(Request $request): JsonResponse
     {
         $user = $request->user(); // Ambil user yang sedang login (jika ada)
