@@ -25,16 +25,22 @@ Route::post('/login', [AuthController::class, 'login']); // ditambahkan login
 Route::get('/users', [UserController::class, 'index']);
 Route::get('/users/{id_user}', [UserController::class, 'show']);
 Route::middleware(['auth:sanctum'])->group(function () {
-    Route::post('/users/{id_user}', [UserController::class, 'update'])->middleware('auth:sanctum');
+    Route::post('/users/{id_user}', [UserController::class, 'update']);
 });
 Route::delete('/users/{id_user}', [UserController::class, 'destroy']);
 
 // Kategori
+
 Route::get('/kategori', [KategoriController::class, 'index']);
 Route::get('/kategori/{id_kategori}', [KategoriController::class, 'show']);
-Route::post('/kategori', [KategoriController::class, 'store']);
-Route::put('/kategori/{id_kategori}', [KategoriController::class, 'update']);
-Route::delete('/kategori/{id_kategori}', [KategoriController::class, 'destroy']);
+
+Route::middleware('auth:sanctum')->group(function () {
+    Route::post('/kategori', [KategoriController::class, 'store']);
+    Route::put('/kategori/{id_kategori}', [KategoriController::class, 'update']);
+    Route::delete('/kategori/{id_kategori}', [KategoriController::class, 'destroy']);
+});
+
+
 
 // Berita
 Route::get('/berita/search', [BeritaController::class, 'search']);

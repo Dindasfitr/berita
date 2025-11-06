@@ -111,13 +111,13 @@ class UserController extends Controller
      * @OA\Post(
      *     path="/users/{id_user}",
      *     tags={"Users"},
-     *     summary="Update user profile",
-     *     description="Mengupdate username, name, email, password, dan foto profil. Tidak perlu field _method, cukup kirim multipart/form-data biasa.",
+     *     summary="Update user profile (self only)",
+     *     description="Mengupdate profil user (username, name, email, password, foto). Hanya bisa dilakukan oleh user itu sendiri.",
      *     security={{"sanctum":{}}},
      *     @OA\Parameter(
      *         name="id_user",
      *         in="path",
-     *         description="ID user",
+     *         description="ID user yang ingin diupdate (harus sama dengan user yang login)",
      *         required=true,
      *         @OA\Schema(type="integer", example=1)
      *     ),
@@ -149,12 +149,26 @@ class UserController extends Controller
      *         )
      *     ),
      *     @OA\Response(response=400, description="Password lama salah"),
-     *     @OA\Response(response=404, description="User tidak ditemukan"),
-     *     @OA\Response(response=401, description="Unauthenticated")
+     *     @OA\Response(response=401, description="Unauthenticated"),
+     *     @OA\Response(response=403, description="Akses ditolak (bukan user sendiri)"),
+     *     @OA\Response(response=404, description="User tidak ditemukan")
      * )
      */
     public function update(Request $request, $id_user): JsonResponse
     {
+        $authUser = $request->user();
+
+        // 🔐 Pastikan sudah login
+        if (!$authUser) {
+            return response()->json(['message' => 'Unauthenticated'], 401);
+        }
+
+        // 🚫 Cegah update user lain
+        if ($authUser->id_user != $id_user) {
+            return response()->json(['message' => 'Akses ditolak, Anda hanya dapat mengubah profil Anda sendiri'], 403);
+        }
+
+        // ✅ Temukan user
         $user = User::find($id_user);
         if (!$user) {
             return response()->json(['error' => 'User tidak ditemukan'], 404);
@@ -175,7 +189,7 @@ class UserController extends Controller
             'foto_profil' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048'
         ]);
 
-        // 🔐 Ubah password jika diminta
+        // 🔒 Ganti password jika dikirim
         if ($request->filled('new_password')) {
             if (!Hash::check($request->old_password, $user->password)) {
                 return response()->json(['error' => 'Password lama salah'], 400);
@@ -183,12 +197,11 @@ class UserController extends Controller
             $user->password = Hash::make($request->new_password);
         }
 
-        // 🧩 Update field text biasa
+        // 🧩 Update data biasa
         $user->fill($request->only(['username', 'name', 'email']));
 
-        // 🖼️ Upload foto profil baru jika dikirim
+        // 🖼️ Upload foto baru jika ada
         if ($request->hasFile('foto_profil')) {
-            // Hapus foto lama kalau ada
             if ($user->foto_profil && Storage::disk('public')->exists($user->foto_profil)) {
                 Storage::disk('public')->delete($user->foto_profil);
             }
@@ -211,6 +224,7 @@ class UserController extends Controller
             'foto_profil' => $user->foto_profil ? asset('storage/' . $user->foto_profil) : null
         ]);
     }
+
 
 
     /**

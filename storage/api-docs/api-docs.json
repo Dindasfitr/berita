@@ -1994,8 +1994,8 @@
                 "tags": [
                     "Kategori"
                 ],
-                "summary": "Create new category",
-                "description": "Menambahkan kategori baru",
+                "summary": "Create new category (Admin only)",
+                "description": "Menambahkan kategori baru (hanya Admin yang dapat mengakses)",
                 "operationId": "4982306ad64a6759985e192a9f7f1636",
                 "requestBody": {
                     "required": true,
@@ -2036,8 +2036,29 @@
                                 }
                             }
                         }
+                    },
+                    "403": {
+                        "description": "Akses ditolak. Hanya admin yang dapat menambahkan kategori.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Akses ditolak, hanya admin yang dapat melakukan aksi ini"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
                     }
-                }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
             }
         },
         "/kategori/{id_kategori}": {
@@ -2090,8 +2111,8 @@
                 "tags": [
                     "Kategori"
                 ],
-                "summary": "Update category",
-                "description": "Mengubah nama kategori",
+                "summary": "Update category (Admin only)",
+                "description": "Mengubah nama kategori (hanya Admin yang dapat mengakses)",
                 "operationId": "c89b086e5c9aa28c2ce5f24a4603e1bd",
                 "parameters": [
                     {
@@ -2144,17 +2165,38 @@
                             }
                         }
                     },
+                    "403": {
+                        "description": "Akses ditolak. Hanya admin yang dapat mengubah kategori.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Akses ditolak, hanya admin yang dapat melakukan aksi ini"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
                     "404": {
                         "description": "Kategori tidak ditemukan"
                     }
-                }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
             },
             "delete": {
                 "tags": [
                     "Kategori"
                 ],
-                "summary": "Delete category",
-                "description": "Menghapus kategori",
+                "summary": "Delete category (Admin only)",
+                "description": "Menghapus kategori (hanya Admin yang dapat mengakses)",
                 "operationId": "2d4515d33fc8da20713477e856b210ee",
                 "parameters": [
                     {
@@ -2171,10 +2213,31 @@
                     "200": {
                         "description": "Kategori berhasil dihapus"
                     },
+                    "403": {
+                        "description": "Akses ditolak. Hanya admin yang dapat menghapus kategori.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Akses ditolak, hanya admin yang dapat melakukan aksi ini"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
                     "404": {
                         "description": "Kategori tidak ditemukan"
                     }
-                }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
             }
         },
         "/notifications": {
@@ -2923,14 +2986,14 @@
                 "tags": [
                     "Users"
                 ],
-                "summary": "Update user profile",
-                "description": "Mengupdate username, name, email, password, dan foto profil. Tidak perlu field _method, cukup kirim multipart/form-data biasa.",
+                "summary": "Update user profile (self only)",
+                "description": "Mengupdate profil user (username, name, email, password, foto). Hanya bisa dilakukan oleh user itu sendiri.",
                 "operationId": "d21cabb937ce4befce14e5d7f6c4fb8d",
                 "parameters": [
                     {
                         "name": "id_user",
                         "in": "path",
-                        "description": "ID user",
+                        "description": "ID user yang ingin diupdate (harus sama dengan user yang login)",
                         "required": true,
                         "schema": {
                             "type": "integer",
@@ -3020,11 +3083,14 @@
                     "400": {
                         "description": "Password lama salah"
                     },
-                    "404": {
-                        "description": "User tidak ditemukan"
-                    },
                     "401": {
                         "description": "Unauthenticated"
+                    },
+                    "403": {
+                        "description": "Akses ditolak (bukan user sendiri)"
+                    },
+                    "404": {
+                        "description": "User tidak ditemukan"
                     }
                 },
                 "security": [

@@ -76,12 +76,15 @@ class KategoriController extends Controller
         return response()->json($kategori);
     }
 
+
+
     /**
      * @OA\Post(
      *     path="/kategori",
      *     tags={"Kategori"},
-     *     summary="Create new category",
-     *     description="Menambahkan kategori baru",
+     *     summary="Create new category (Admin only)",
+     *     description="Menambahkan kategori baru (hanya Admin yang dapat mengakses)",
+     *     security={{"sanctum":{}}},
      *     @OA\RequestBody(
      *         required=true,
      *         @OA\JsonContent(
@@ -96,15 +99,37 @@ class KategoriController extends Controller
      *             @OA\Property(property="id_kategori", type="integer", example=1),
      *             @OA\Property(property="kategori", type="string", example="Teknologi")
      *         )
+     *     ),
+     *     @OA\Response(
+     *         response=403,
+     *         description="Akses ditolak. Hanya admin yang dapat menambahkan kategori.",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="message", type="string", example="Akses ditolak, hanya admin yang dapat melakukan aksi ini")
+     *         )
      *     )
      * )
      */
     public function store(Request $request): JsonResponse
     {
+        // Pastikan user sudah login
+        $user = $request->user();
+        if (!$user) {
+            return response()->json(['message' => 'Unauthorized'], 401);
+        }
+
+        // Cek role-nya
+        if ($user->role !== 'admin') {
+            return response()->json([
+                'message' => 'Akses ditolak, hanya admin yang dapat melakukan aksi ini'
+            ], 403);
+        }
+
+        // Validasi input
         $request->validate([
             'kategori' => 'required|string|max:255|unique:kategori,kategori'
         ]);
 
+        // Simpan kategori baru
         $kategori = Kategori::create([
             'kategori' => $request->kategori
         ]);
@@ -112,12 +137,14 @@ class KategoriController extends Controller
         return response()->json($kategori, 201);
     }
 
+
     /**
      * @OA\Put(
      *     path="/kategori/{id_kategori}",
      *     tags={"Kategori"},
-     *     summary="Update category",
-     *     description="Mengubah nama kategori",
+     *     summary="Update category (Admin only)",
+     *     description="Mengubah nama kategori (hanya Admin yang dapat mengakses)",
+     *     security={{"sanctum":{}}},
      *     @OA\Parameter(
      *         name="id_kategori",
      *         in="path",
@@ -140,6 +167,13 @@ class KategoriController extends Controller
      *         )
      *     ),
      *     @OA\Response(
+     *         response=403,
+     *         description="Akses ditolak. Hanya admin yang dapat mengubah kategori.",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="message", type="string", example="Akses ditolak, hanya admin yang dapat melakukan aksi ini")
+     *         )
+     *     ),
+     *     @OA\Response(
      *         response=404,
      *         description="Kategori tidak ditemukan"
      *     )
@@ -147,6 +181,15 @@ class KategoriController extends Controller
      */
     public function update(Request $request, $id_kategori): JsonResponse
     {
+        $user = $request->user();
+        if (!$user) {
+            return response()->json(['message' => 'Unauthorized'], 401);
+        }
+
+        if ($user->role !== 'admin') {
+            return response()->json(['message' => 'Akses ditolak, hanya admin yang dapat melakukan aksi ini'], 403);
+        }
+
         $kategori = Kategori::find($id_kategori);
         if (!$kategori) {
             return response()->json(['error' => 'Kategori tidak ditemukan'], 404);
@@ -166,8 +209,9 @@ class KategoriController extends Controller
      * @OA\Delete(
      *     path="/kategori/{id_kategori}",
      *     tags={"Kategori"},
-     *     summary="Delete category",
-     *     description="Menghapus kategori",
+     *     summary="Delete category (Admin only)",
+     *     description="Menghapus kategori (hanya Admin yang dapat mengakses)",
+     *     security={{"sanctum":{}}},
      *     @OA\Parameter(
      *         name="id_kategori",
      *         in="path",
@@ -179,13 +223,29 @@ class KategoriController extends Controller
      *         description="Kategori berhasil dihapus"
      *     ),
      *     @OA\Response(
+     *         response=403,
+     *         description="Akses ditolak. Hanya admin yang dapat menghapus kategori.",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="message", type="string", example="Akses ditolak, hanya admin yang dapat melakukan aksi ini")
+     *         )
+     *     ),
+     *     @OA\Response(
      *         response=404,
      *         description="Kategori tidak ditemukan"
      *     )
      * )
      */
-    public function destroy($id_kategori): JsonResponse
+    public function destroy(Request $request, $id_kategori): JsonResponse
     {
+        $user = $request->user();
+        if (!$user) {
+            return response()->json(['message' => 'Unauthorized'], 401);
+        }
+
+        if ($user->role !== 'admin') {
+            return response()->json(['message' => 'Akses ditolak, hanya admin yang dapat melakukan aksi ini'], 403);
+        }
+
         $kategori = Kategori::find($id_kategori);
         if (!$kategori) {
             return response()->json(['error' => 'Kategori tidak ditemukan'], 404);
@@ -195,4 +255,5 @@ class KategoriController extends Controller
 
         return response()->json(['message' => 'Kategori berhasil dihapus']);
     }
+
 }
